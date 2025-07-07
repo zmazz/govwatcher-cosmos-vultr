@@ -1,0 +1,33 @@
+# Simple single-stage Dockerfile for AWS Lambda compatibility
+FROM public.ecr.aws/lambda/python:3.11
+
+# Set environment variables for Lambda
+ENV PYTHONPATH="${LAMBDA_TASK_ROOT}:${PYTHONPATH}"
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=INFO
+
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt ${LAMBDA_TASK_ROOT}/
+
+# Install build dependencies and Python packages
+RUN yum update -y && \
+    yum install -y gcc g++ make && \
+    pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt && \
+    yum remove -y gcc g++ make && \
+    yum clean all && \
+    rm -rf /var/cache/yum
+
+# Copy application source code
+COPY src/ ${LAMBDA_TASK_ROOT}/src/
+COPY handler.py ${LAMBDA_TASK_ROOT}/
+
+# Set proper permissions for Lambda execution
+RUN chmod 755 ${LAMBDA_TASK_ROOT}/handler.py
+
+# Metadata labels
+LABEL maintainer="GovWatcher Team"
+LABEL version="1.0.0"
+LABEL description="Cosmos Governance Watcher SaaS - Multi-Agent System"
+
+# Lambda handler configuration
+CMD ["handler.subscription_handler"] 

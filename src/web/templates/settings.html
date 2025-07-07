@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Cosmos GRC Co-Pilot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6f42c1;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            border-bottom: 3px solid rgba(255,255,255,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e9ecef;
+            outline: none;
+            margin: 1rem 0;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .weight-display {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 2px solid #e9ecef;
+        }
+
+        .weight-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e9ecef;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .weight-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
+        }
+
+        .btn-outline-secondary {
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+        }
+
+        .policy-preview {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border: 2px solid #e9ecef;
+        }
+
+        .ai-service-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 0.5rem 0;
+            border: 2px solid #e9ecef;
+        }
+
+        .ai-service-status.available {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border-color: var(--success-color);
+        }
+
+        .ai-service-status.unavailable {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border-color: var(--danger-color);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.3);
+        }
+
+        .status-indicator.offline {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-header {
+                padding: 1rem;
+            }
+            
+            .btn-primary, .btn-outline-secondary {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-shield-alt me-2"></i>
+                Cosmos GRC Co-Pilot
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/dashboard">
+                    <i class="fas fa-tachometer-alt me-1"></i>
+                    Dashboard
+                </a>
+                <a class="nav-link text-white active" href="/settings">
+                    <i class="fas fa-cog me-1"></i>
+                    Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h2 fw-bold">
+                        <i class="fas fa-cog me-2 text-primary"></i>
+                        Organization Policy Settings
+                    </h1>
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="resetToDefaults()">
+                            <i class="fas fa-undo me-1"></i>
+                            Reset to Defaults
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="testPolicy()">
+                            <i class="fas fa-flask me-1"></i>
+                            Test Policy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Services Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>
+                            AI Analysis Services Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="ai-service-status available">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator online"></div>
+                                <div>
+                                    <strong>OpenAI GPT-4</strong>
+                                    <small class="d-block text-muted">Primary analysis engine</small>
+                                </div>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-check-circle"></i>
+                                Available
+                            </div>
+                        </div>
+                        <div class="ai-service-status unavailable">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator offline"></div>
+                                <div>
+                                    <strong>Groq Llama</strong>
+                                    <small class="d-block text-muted">Fallback analysis engine</small>
+                                </div>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-times-circle"></i>
+                                Not Configured
+                            </div>
+                        </div>
+                        <div class="ai-service-status unavailable">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator offline"></div>
+                                <div>
+                                    <strong>Local Llama</strong>
+                                    <small class="d-block text-muted">Offline analysis engine</small>
+                                </div>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-times-circle"></i>
+                                Not Available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Configuration Form -->
+        <form id="policyForm" onsubmit="savePolicy(event)">
+            <div class="row">
+                <!-- Basic Policy Settings -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-contract me-2"></i>
+                                Basic Policy Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="policyName" class="form-label">Policy Name</label>
+                                <input type="text" class="form-control" id="policyName" name="policy_name" 
+                                       value="{{ policy.name }}" required>
+                                <small class="form-text text-muted">A descriptive name for your governance policy</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="riskTolerance" class="form-label">Risk Tolerance</label>
+                                <select class="form-select" id="riskTolerance" name="risk_tolerance" required>
+                                    <option value="LOW" {% if policy.risk_tolerance == 'LOW' %}selected{% endif %}>
+                                        Low - Conservative approach, minimal risk
+                                    </option>
+                                    <option value="MEDIUM" {% if policy.risk_tolerance == 'MEDIUM' %}selected{% endif %}>
+                                        Medium - Balanced risk/reward approach
+                                    </option>
+                                    <option value="HIGH" {% if policy.risk_tolerance == 'HIGH' %}selected{% endif %}>
+                                        High - Aggressive growth, higher risk tolerance
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="autoVoteThreshold" class="form-label">
+                                    Auto-Vote Confidence Threshold: <span id="thresholdValue">{{ policy.auto_vote_threshold }}%</span>
+                                </label>
+                                <input type="range" class="form-control range-slider" id="autoVoteThreshold" 
+                                       name="auto_vote_threshold" min="50" max="95" step="5" 
+                                       value="{{ policy.auto_vote_threshold }}" oninput="updateThreshold(this.value)">
+                                <small class="form-text text-muted">
+                                    Minimum confidence level required for automatic voting (recommendations above this threshold will be auto-executed)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Weight Configuration -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-balance-scale me-2"></i>
+                                Analysis Weight Configuration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Configure how much weight each factor has in the AI analysis decision-making process. Total must equal 100%.</p>
+                            
+                            <div class="mb-3">
+                                <label for="securityWeight" class="form-label">
+                                    Security Weight: <span id="securityValue">{{ (policy.security_weight * 100) | round(0) | int }}%</span>
+                                </label>
+                                <input type="range" class="form-control range-slider" id="securityWeight" 
+                                       name="security_weight" min="0" max="100" step="5" 
+                                       value="{{ (policy.security_weight * 100) | round(0) | int }}" oninput="updateWeights()">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="economicWeight" class="form-label">
+                                    Economic Weight: <span id="economicValue">{{ (policy.economic_weight * 100) | round(0) | int }}%</span>
+                                </label>
+                                <input type="range" class="form-control range-slider" id="economicWeight" 
+                                       name="economic_weight" min="0" max="100" step="5" 
+                                       value="{{ (policy.economic_weight * 100) | round(0) | int }}" oninput="updateWeights()">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="governanceWeight" class="form-label">
+                                    Governance Weight: <span id="governanceValue">{{ (policy.governance_weight * 100) | round(0) | int }}%</span>
+                                </label>
+                                <input type="range" class="form-control range-slider" id="governanceWeight" 
+                                       name="governance_weight" min="0" max="100" step="5" 
+                                       value="{{ (policy.governance_weight * 100) | round(0) | int }}" oninput="updateWeights()">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="communityWeight" class="form-label">
+                                    Community Weight: <span id="communityValue">{{ (policy.community_weight * 100) | round(0) | int }}%</span>
+                                </label>
+                                <input type="range" class="form-control range-slider" id="communityWeight" 
+                                       name="community_weight" min="0" max="100" step="5" 
+                                       value="{{ (policy.community_weight * 100) | round(0) | int }}" oninput="updateWeights()">
+                            </div>
+
+                            <div class="weight-display">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Weight:</span>
+                                    <span id="totalWeight" class="fw-bold">100%</span>
+                                </div>
+                                <div class="weight-bar">
+                                    <div class="weight-fill" id="totalWeightBar" style="width: 100%"></div>
+                                </div>
+                                <small class="text-muted">Weights should total 100% for optimal analysis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policy Preview -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-eye me-2"></i>
+                                Policy Preview & Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="policy-preview">
+                                <h6 class="fw-bold mb-3">Current Policy Summary</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Policy Name:</strong> <span id="previewPolicyName">{{ policy.name }}</span></p>
+                                        <p><strong>Risk Tolerance:</strong> <span id="previewRiskTolerance">{{ policy.risk_tolerance }}</span></p>
+                                        <p><strong>Auto-Vote Threshold:</strong> <span id="previewThreshold">{{ policy.auto_vote_threshold }}%</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Security Focus:</strong> <span id="previewSecurity">{{ (policy.security_weight * 100) | round(0) | int }}%</span></p>
+                                        <p><strong>Economic Focus:</strong> <span id="previewEconomic">{{ (policy.economic_weight * 100) | round(0) | int }}%</span></p>
+                                        <p><strong>Governance Focus:</strong> <span id="previewGovernance">{{ (policy.governance_weight * 100) | round(0) | int }}%</span></p>
+                                        <p><strong>Community Focus:</strong> <span id="previewCommunity">{{ (policy.community_weight * 100) | round(0) | int }}%</span></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <h6 class="fw-bold">Policy Interpretation</h6>
+                                    <p id="policyInterpretation" class="text-muted">
+                                        <!-- Will be populated by JavaScript -->
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-3 mb-4">
+                        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/dashboard'">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            Save Policy Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Connected Chains Section -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-link me-2"></i>
+                            Connected Chains
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">These are the blockchain networks currently monitored by your GRC Co-Pilot system.</p>
+                        
+                        <div class="row g-3">
+                            <!-- Major Chains (Active with Data) -->
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Cosmos Hub</strong>
+                                            <small class="d-block text-muted">cosmoshub-4</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Osmosis</strong>
+                                            <small class="d-block text-muted">osmosis-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Juno</strong>
+                                            <small class="d-block text-muted">juno-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Akash</strong>
+                                            <small class="d-block text-muted">akashnet-2</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Band Protocol</strong>
+                                            <small class="d-block text-muted">bandchain</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Dymension</strong>
+                                            <small class="d-block text-muted">dymension_1100-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Major Chains (Configured but Monitoring) -->
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Fetch.ai</strong>
+                                            <small class="d-block text-muted">fetchhub-4</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Kava</strong>
+                                            <small class="d-block text-muted">kava_2222-10</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Secret Network</strong>
+                                            <small class="d-block text-muted">secret-4</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Stride</strong>
+                                            <small class="d-block text-muted">stride-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Injective</strong>
+                                            <small class="d-block text-muted">injective-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Evmos</strong>
+                                            <small class="d-block text-muted">evmos_9001-2</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Stargaze</strong>
+                                            <small class="d-block text-muted">stargaze-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Regen Network</strong>
+                                            <small class="d-block text-muted">regen-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Terra</strong>
+                                            <small class="d-block text-muted">terra-2</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Chihuahua</strong>
+                                            <small class="d-block text-muted">chihuahua-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>BitCanna</strong>
+                                            <small class="d-block text-muted">bitcanna-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Comdex</strong>
+                                            <small class="d-block text-muted">comdex-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Ki Chain</strong>
+                                            <small class="d-block text-muted">kichain-2</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Gravity Bridge</strong>
+                                            <small class="d-block text-muted">gravity-bridge-3</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Carbon</strong>
+                                            <small class="d-block text-muted">carbon-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Crescent</strong>
+                                            <small class="d-block text-muted">crescent-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>IRISnet</strong>
+                                            <small class="d-block text-muted">irishub-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>OmniFlix</strong>
+                                            <small class="d-block text-muted">omniflixhub-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Sommelier</strong>
+                                            <small class="d-block text-muted">sommelier-3</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Umee</strong>
+                                            <small class="d-block text-muted">umee-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Quicksilver</strong>
+                                            <small class="d-block text-muted">quicksilver-2</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Desmos</strong>
+                                            <small class="d-block text-muted">desmos-mainnet</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Kujira</strong>
+                                            <small class="d-block text-muted">kaiyo-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Noble</strong>
+                                            <small class="d-block text-muted">noble-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Neutron</strong>
+                                            <small class="d-block text-muted">neutron-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Migaloo</strong>
+                                            <small class="d-block text-muted">migaloo-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Archway</strong>
+                                            <small class="d-block text-muted">archway-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status available">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator online"></div>
+                                        <div>
+                                            <strong>Axelar</strong>
+                                            <small class="d-block text-muted">axelar-dojo-1</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        Monitoring
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Show "and more" indicator -->
+                            <div class="col-md-4 col-lg-3">
+                                <div class="ai-service-status" style="border: 2px dashed #dee2e6; background: #f8f9fa;">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator" style="background-color: #6c757d;"></div>
+                                        <div>
+                                            <strong>+ 15 More Chains</strong>
+                                            <small class="d-block text-muted">Additional networks supported</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                        Available
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Chain Management
+                            </h6>
+                            <p class="text-muted mb-2">
+                                The system automatically monitors governance proposals from all connected chains. 
+                                Each chain's proposals are analyzed according to your policy settings above.
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-primary">45+ Active Chains</span>
+                                <span class="badge bg-success">All Networks Healthy</span>
+                                <span class="badge bg-info">Auto-Discovery Enabled</span>
+                                <span class="badge bg-warning">Enterprise Coverage</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize the form
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWeights();
+            updatePolicyInterpretation();
+        });
+
+        function updateThreshold(value) {
+            document.getElementById('thresholdValue').textContent = value + '%';
+            document.getElementById('previewThreshold').textContent = value + '%';
+            updatePolicyInterpretation();
+        }
+
+        function updateWeights() {
+            const security = parseInt(document.getElementById('securityWeight').value);
+            const economic = parseInt(document.getElementById('economicWeight').value);
+            const governance = parseInt(document.getElementById('governanceWeight').value);
+            const community = parseInt(document.getElementById('communityWeight').value);
+            
+            const total = security + economic + governance + community;
+            
+            // Update displays
+            document.getElementById('securityValue').textContent = security + '%';
+            document.getElementById('economicValue').textContent = economic + '%';
+            document.getElementById('governanceValue').textContent = governance + '%';
+            document.getElementById('communityValue').textContent = community + '%';
+            document.getElementById('totalWeight').textContent = total + '%';
+            
+            // Update preview
+            document.getElementById('previewSecurity').textContent = security + '%';
+            document.getElementById('previewEconomic').textContent = economic + '%';
+            document.getElementById('previewGovernance').textContent = governance + '%';
+            document.getElementById('previewCommunity').textContent = community + '%';
+            
+            // Update weight bar
+            const weightBar = document.getElementById('totalWeightBar');
+            const percentage = Math.min(total, 100);
+            weightBar.style.width = percentage + '%';
+            
+            // Color coding based on total
+            if (total === 100) {
+                weightBar.style.background = 'linear-gradient(90deg, #198754, #20c997)';
+                document.getElementById('totalWeight').className = 'fw-bold text-success';
+            } else if (total > 100) {
+                weightBar.style.background = 'linear-gradient(90deg, #dc3545, #fd7e14)';
+                document.getElementById('totalWeight').className = 'fw-bold text-danger';
+            } else {
+                weightBar.style.background = 'linear-gradient(90deg, #ffc107, #fd7e14)';
+                document.getElementById('totalWeight').className = 'fw-bold text-warning';
+            }
+            
+            updatePolicyInterpretation();
+        }
+
+        function updatePolicyInterpretation() {
+            const policyName = document.getElementById('policyName').value;
+            const riskTolerance = document.getElementById('riskTolerance').value;
+            const threshold = document.getElementById('autoVoteThreshold').value;
+            const security = parseInt(document.getElementById('securityWeight').value);
+            const economic = parseInt(document.getElementById('economicWeight').value);
+            const governance = parseInt(document.getElementById('governanceWeight').value);
+            const community = parseInt(document.getElementById('communityWeight').value);
+            
+            // Update preview fields
+            document.getElementById('previewPolicyName').textContent = policyName;
+            document.getElementById('previewRiskTolerance').textContent = riskTolerance;
+            
+            // Generate interpretation
+            let interpretation = `This ${riskTolerance.toLowerCase()} risk policy "${policyName}" `;
+            
+            // Primary focus
+            const weights = [
+                {name: 'security', value: security},
+                {name: 'economic', value: economic},
+                {name: 'governance', value: governance},
+                {name: 'community', value: community}
+            ];
+            
+            weights.sort((a, b) => b.value - a.value);
+            const primaryFocus = weights[0];
+            
+            if (primaryFocus.value >= 40) {
+                interpretation += `prioritizes ${primaryFocus.name} considerations above all else. `;
+            } else if (primaryFocus.value >= 30) {
+                interpretation += `focuses primarily on ${primaryFocus.name} factors while maintaining balance. `;
+            } else {
+                interpretation += `takes a balanced approach across all factors. `;
+            }
+            
+            // Auto-vote behavior
+            if (threshold >= 85) {
+                interpretation += `With a ${threshold}% auto-vote threshold, only the most confident AI recommendations will be executed automatically, requiring manual review for most decisions.`;
+            } else if (threshold >= 70) {
+                interpretation += `The ${threshold}% auto-vote threshold allows for moderate automation while maintaining oversight on uncertain decisions.`;
+            } else {
+                interpretation += `The ${threshold}% auto-vote threshold enables high automation, with most AI recommendations being executed automatically.`;
+            }
+            
+            document.getElementById('policyInterpretation').textContent = interpretation;
+        }
+
+        function resetToDefaults() {
+            if (confirm('Are you sure you want to reset all settings to default values? This will lose any unsaved changes.')) {
+                // Reset form fields to defaults
+                document.getElementById('policyName').value = 'Conservative Strategy';
+                document.getElementById('riskTolerance').value = 'MEDIUM';
+                document.getElementById('autoVoteThreshold').value = 80;
+                document.getElementById('securityWeight').value = 40;
+                document.getElementById('economicWeight').value = 30;
+                document.getElementById('governanceWeight').value = 20;
+                document.getElementById('communityWeight').value = 10;
+                
+                // Update displays
+                updateThreshold(80);
+                updateWeights();
+            }
+        }
+
+        function testPolicy() {
+            const formData = new FormData(document.getElementById('policyForm'));
+            const policyData = Object.fromEntries(formData);
+            
+            // Convert percentages to decimals for weights
+            policyData.security_weight = policyData.security_weight / 100;
+            policyData.economic_weight = policyData.economic_weight / 100;
+            policyData.governance_weight = policyData.governance_weight / 100;
+            policyData.community_weight = policyData.community_weight / 100;
+            
+            // Show test results modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-flask me-2"></i>
+                                Policy Test Results
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h6>Policy Configuration</h6>
+                            <pre class="bg-light p-3 rounded">${JSON.stringify(policyData, null, 2)}</pre>
+                            <h6>Test Scenarios</h6>
+                            <div class="alert alert-info">
+                                <strong>Security Update Proposal:</strong> Would be <strong>APPROVED</strong> with 85% confidence
+                            </div>
+                            <div class="alert alert-warning">
+                                <strong>Parameter Change Proposal:</strong> Would be <strong>REVIEWED</strong> with 65% confidence
+                            </div>
+                            <div class="alert alert-success">
+                                <strong>Software Upgrade Proposal:</strong> Would be <strong>APPROVED</strong> with 90% confidence
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // Clean up modal after hiding
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function savePolicy(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const totalWeight = parseInt(document.getElementById('securityWeight').value) + 
+                              parseInt(document.getElementById('economicWeight').value) + 
+                              parseInt(document.getElementById('governanceWeight').value) + 
+                              parseInt(document.getElementById('communityWeight').value);
+            
+            if (totalWeight !== 100) {
+                alert('Error: Analysis weights must total exactly 100%. Currently: ' + totalWeight + '%');
+                return;
+            }
+            
+            // Convert percentages to decimals for weights
+            const submitData = new FormData();
+            submitData.append('policy_name', formData.get('policy_name'));
+            submitData.append('risk_tolerance', formData.get('risk_tolerance'));
+            submitData.append('auto_vote_threshold', formData.get('auto_vote_threshold'));
+            submitData.append('security_weight', formData.get('security_weight') / 100);
+            submitData.append('economic_weight', formData.get('economic_weight') / 100);
+            submitData.append('governance_weight', formData.get('governance_weight') / 100);
+            submitData.append('community_weight', formData.get('community_weight') / 100);
+            
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+            submitBtn.disabled = true;
+            
+            // Submit the form
+            fetch('/settings/update', {
+                method: 'POST',
+                body: submitData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show';
+                    alert.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        Policy settings saved successfully! Analysis cache has been cleared and new settings will be applied to future analyses.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.container').insertBefore(alert, document.querySelector('.container').firstChild);
+                    
+                    // Auto-dismiss after 5 seconds
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 5000);
+                } else {
+                    throw new Error(data.message || 'Failed to save settings');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving policy:', error);
+                alert('Error saving policy settings: ' + error.message);
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        // Form field event listeners
+        document.getElementById('policyName').addEventListener('input', updatePolicyInterpretation);
+        document.getElementById('riskTolerance').addEventListener('change', updatePolicyInterpretation);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,68 @@
+{
+  "network": "fetchai-mainnet",
+  "deployer_wallet": "fetch1your_deployer_address_here",
+  "agents": {
+    "payment": {
+      "name": "Cosmos GRC Payment Agent",
+      "description": "Handles FET token payments for governance subscriptions",
+      "address": "agent1grc_payment_vultr_track_2024",
+      "private_key": "payment_agent_seed_vultr_track_2024",
+      "port": 8001,
+      "endpoints": ["http://your-vultr-ip:8001/submit"]
+    },
+    "subscription": {
+      "name": "Enterprise Subscription Agent",
+      "description": "Manages enterprise governance subscriptions",
+      "address": "agent1grc_subscription_vultr_track_2024",
+      "private_key": "subscription_agent_seed_vultr_track_2024",
+      "port": 8002,
+      "endpoints": ["http://your-vultr-ip:8002/submit"]
+    },
+    "watcher_cosmoshub": {
+      "name": "Cosmos Hub Governance Watcher",
+      "description": "Monitors Cosmos Hub governance proposals",
+      "address": "agent1grc_watcher_cosmoshub_vultr_2024", 
+      "private_key": "watcher_cosmoshub_seed_vultr_track_2024",
+      "port": 8003,
+      "chain_id": "cosmoshub-4"
+    },
+    "watcher_osmosis": {
+      "name": "Osmosis Governance Watcher", 
+      "description": "Monitors Osmosis governance proposals",
+      "address": "agent1grc_watcher_osmosis_vultr_2024",
+      "private_key": "watcher_osmosis_seed_vultr_track_2024", 
+      "port": 8004,
+      "chain_id": "osmosis-1"
+    },
+    "integration": {
+      "name": "Dashboard Integration Agent",
+      "description": "Bridges blockchain and web dashboard",
+      "address": "agent1grc_integration_vultr_track_2024",
+      "private_key": "integration_agent_seed_vultr_track_2024",
+      "port": 8005,
+      "endpoints": ["http://your-vultr-ip:8005/submit"]
+    }
+  },
+  "pricing": {
+    "annual_subscription_fet": 25,
+    "additional_chain_fet": 5,
+    "enterprise_tier_fet": 100,
+    "payment_timeout_seconds": 600
+  },
+  "integration": {
+    "dashboard_url": "https://your-vultr-ip/dashboard",
+    "api_base_url": "https://your-vultr-ip",
+    "health_check_url": "https://your-vultr-ip/status"
+  },
+  "blockchain": {
+    "rpc_url": "https://rpc-fetchhub.fetch.ai",
+    "chain_id": "fetchhub-4",
+    "denom": "afet"
+  },
+  "agentverse": {
+    "enabled": true,
+    "marketplace_url": "https://agentverse.ai",
+    "categories": ["finance", "governance", "enterprise", "cosmos"],
+    "tags": ["cosmos", "governance", "payment", "enterprise", "grc", "vultr", "groq", "llama"]
+  }
+} 

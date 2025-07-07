@@ -1,0 +1,475 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Cosmos Gov-Watcher SaaS - Multi-Agent Governance Monitoring System"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: "Domain name for the service"
+    Default: "govwatcher.com"
+  
+  FromEmail:
+    Type: String
+    Description: "From email address for SES"
+    Default: "noreply@govwatcher.com"
+  
+  OpenAIKey:
+    Type: String
+    Description: "OpenAI API key"
+    NoEcho: true
+  
+  PrivateKey:
+    Type: String
+    Description: "uAgents private key"
+    NoEcho: true
+  
+  AnnualFeeFET:
+    Type: Number
+    Description: "Annual subscription fee in FET tokens"
+    Default: 15
+  
+  ExtraChainFeeFET:
+    Type: Number
+    Description: "Extra chain fee in FET tokens"
+    Default: 1
+  
+  LLMModel:
+    Type: String
+    Description: "OpenAI model to use for analysis"
+    Default: "gpt-4o"
+    AllowedValues: ["gpt-4o", "gpt-4", "gpt-3.5-turbo"]
+  
+  Stage:
+    Type: String
+    Description: "Deployment stage"
+    Default: "prod"
+    AllowedValues: ["dev", "staging", "prod"]
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 512
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        STAGE: !Ref Stage
+        DYNAMODB_TABLE_NAME: !Ref SubscriptionTable
+        S3_BUCKET_NAME: !Ref LogBucket
+        FROM_EMAIL: !Ref FromEmail
+        SERVICE_URL: !Sub "https://${DomainName}"
+        ANNUAL_FEE_FET: !Ref AnnualFeeFET
+        EXTRA_CHAIN_FEE_FET: !Ref ExtraChainFeeFET
+        LLM_MODEL: !Ref LLMModel
+        OPENAI_SECRET_NAME: !Ref OpenAISecret
+        PRIVATE_KEY_SECRET_NAME: !Ref PrivateKeySecret
+
+Resources:
+  # S3 Bucket for Logs
+  LogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-govwatcher-logs-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: Glacier
+            Status: Enabled
+            ExpirationInDays: 30
+      VersioningConfiguration:
+        Status: Enabled
+
+  # DynamoDB Table for Subscriptions
+  SubscriptionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-GovSubscriptions"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: wallet
+          AttributeType: S
+      KeySchema:
+        - AttributeName: wallet
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Application
+          Value: GovWatcher
+        - Key: Stage
+          Value: !Ref Stage
+
+  # Note: ECR Repository 'govwatcher-govwatcher' already exists and is managed externally
+
+  # Secrets Manager for API Keys
+  OpenAISecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}/OpenAI"
+      Description: "OpenAI API key for GovWatcher"
+      SecretString: !Ref OpenAIKey
+
+  PrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${AWS::StackName}/PrivateKey"
+      Description: "uAgents private key for GovWatcher"
+      SecretString: !Ref PrivateKey
+
+  # CloudWatch Log Group
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-govwatcher"
+      RetentionInDays: 30
+
+  # IAM Role for Lambda Functions
+  GovWatcherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-GovWatcherRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AccessAWS
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "dynamodb:*"
+                Resource: "*"
+              - Effect: Allow
+                Action: "s3:PutObject"
+                Resource: "*"
+              - Effect: Allow
+                Action: "ses:SendEmail"
+                Resource: "*"
+              - Effect: Allow
+                Action: 
+                  - "secretsmanager:GetSecretValue"
+                  - "secretsmanager:DescribeSecret"
+                Resource: "*"
+
+  # Lambda Function: SubscriptionAgent
+  SubscriptionAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-SubscriptionAgent"
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:latest"
+      ImageConfig:
+        Command: ["handler.subscription_handler"]
+      Role: !GetAtt GovWatcherRole.Arn
+      Environment:
+        Variables:
+          AGENT_TYPE: subscription
+          SUBSCRIPTION_AGENT_SEED: !Sub "${AWS::StackName}_subscription_${Stage}"
+          SKIP_PAYMENT_VALIDATION: "false"
+      Events:
+        ApiGateway:
+          Type: Api
+          Properties:
+            Path: /subscribe
+            Method: POST
+            RestApiId: !Ref GovWatcherApi
+      Tags:
+        Application: GovWatcher
+        Agent: SubscriptionAgent
+        Stage: !Ref Stage
+
+  # Lambda Function: WatcherAgent (Cosmos Hub)
+  WatcherAgentCosmosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-WatcherAgent-CosmosHub"
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:latest"
+      ImageConfig:
+        Command: ["handler.watcher_handler"]
+      Role: !GetAtt GovWatcherRole.Arn
+      Environment:
+        Variables:
+          AGENT_TYPE: watcher
+          CHAIN_ID: cosmoshub-4
+          WATCHER_AGENT_SEED: !Sub "${AWS::StackName}_watcher_cosmoshub_${Stage}"
+          ANALYSIS_AGENT_ADDRESS: !GetAtt AnalysisAgentFunction.Arn
+      Events:
+        ScheduleRule:
+          Type: Schedule
+          Properties:
+            Schedule: "rate(12 hours)"
+            Description: "Trigger WatcherAgent every 12 hours for Cosmos Hub"
+      Tags:
+        Application: GovWatcher
+        Agent: WatcherAgent
+        Chain: cosmoshub-4
+        Stage: !Ref Stage
+
+  # Lambda Function: WatcherAgent (Osmosis)
+  WatcherAgentOsmosisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-WatcherAgent-Osmosis"
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:latest"
+      ImageConfig:
+        Command: ["handler.watcher_handler"]
+      Role: !GetAtt GovWatcherRole.Arn
+      Environment:
+        Variables:
+          AGENT_TYPE: watcher
+          CHAIN_ID: osmosis-1
+          WATCHER_AGENT_SEED: !Sub "${AWS::StackName}_watcher_osmosis_${Stage}"
+          ANALYSIS_AGENT_ADDRESS: !GetAtt AnalysisAgentFunction.Arn
+      Events:
+        ScheduleRule:
+          Type: Schedule
+          Properties:
+            Schedule: "rate(12 hours)"
+            Description: "Trigger WatcherAgent every 12 hours for Osmosis"
+      Tags:
+        Application: GovWatcher
+        Agent: WatcherAgent
+        Chain: osmosis-1
+        Stage: !Ref Stage
+
+  # Lambda Function: AnalysisAgent
+  AnalysisAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-AnalysisAgent"
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:latest"
+      ImageConfig:
+        Command: ["handler.analysis_handler"]
+      Role: !GetAtt GovWatcherRole.Arn
+      Timeout: 600  # 10 minutes for LLM processing
+      MemorySize: 1024  # More memory for AI processing
+      Environment:
+        Variables:
+          AGENT_TYPE: analysis
+          ANALYSIS_AGENT_SEED: !Sub "${AWS::StackName}_analysis_${Stage}"
+          MAIL_AGENT_ADDRESS: !GetAtt MailAgentFunction.Arn
+      Tags:
+        Application: GovWatcher
+        Agent: AnalysisAgent
+        Stage: !Ref Stage
+
+  # Lambda Function: MailAgent
+  MailAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-MailAgent"
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:latest"
+      ImageConfig:
+        Command: ["handler.mail_handler"]
+      Role: !GetAtt GovWatcherRole.Arn
+      Environment:
+        Variables:
+          AGENT_TYPE: mail
+          MAIL_AGENT_SEED: !Sub "${AWS::StackName}_mail_${Stage}"
+          PAUSED: "0"  # Can be changed to "1" to pause all emails
+      Tags:
+        Application: GovWatcher
+        Agent: MailAgent
+        Stage: !Ref Stage
+
+  # API Gateway
+  GovWatcherApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-GovWatcherApi"
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Sender-Address'"
+        AllowOrigin: "'*'"
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title: "GovWatcher API"
+          version: "1.0"
+        paths:
+          /subscribe:
+            post:
+              produces:
+                - application/json
+              responses:
+                "200":
+                  description: "Successful subscription"
+                "400":
+                  description: "Invalid request"
+                "500":
+                  description: "Internal server error"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SubscriptionAgentFunction.Arn}/invocations"
+          /health:
+            get:
+              produces:
+                - application/json
+              responses:
+                "200":
+                  description: "Health check"
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    statusCode: 200
+                    responseTemplates:
+                      application/json: '{"status": "healthy", "timestamp": "$context.requestTime"}'
+
+  # CloudWatch Dashboard
+  GovWatcherDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${AWS::StackName}-GovWatcher"
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${SubscriptionAgentFunction}"],
+                  [".", ".", ".", "${WatcherAgentCosmosFunction}"],
+                  [".", ".", ".", "${AnalysisAgentFunction}"],
+                  [".", ".", ".", "${MailAgentFunction}"]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Lambda Invocations"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/Lambda", "Errors", "FunctionName", "${SubscriptionAgentFunction}"],
+                  [".", ".", ".", "${WatcherAgentCosmosFunction}"],
+                  [".", ".", ".", "${AnalysisAgentFunction}"],
+                  [".", ".", ".", "${MailAgentFunction}"]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Lambda Errors"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${SubscriptionTable}"],
+                  [".", "ConsumedWriteCapacityUnits", ".", "."]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "DynamoDB Usage"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "metrics": [
+                  ["AWS/SES", "Send"],
+                  [".", "Bounce"],
+                  [".", "Complaint"]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "SES Email Stats"
+              }
+            }
+          ]
+        }
+
+  # CloudWatch Alarms
+  SubscriptionAgentErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SubscriptionAgent-Errors"
+      AlarmDescription: "Alert when SubscriptionAgent has errors"
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SubscriptionAgentFunction
+
+  # Additional Watcher functions for other chains can be added here
+  # WatcherAgentJunoFunction, WatcherAgentFetchFunction, etc.
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway URL"
+    Value: !Sub "https://${GovWatcherApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiUrl"
+
+  SubscriptionTableName:
+    Description: "DynamoDB table name for subscriptions"
+    Value: !Ref SubscriptionTable
+    Export:
+      Name: !Sub "${AWS::StackName}-SubscriptionTable"
+
+  LogBucketName:
+    Description: "S3 bucket name for logs"
+    Value: !Ref LogBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-LogBucket"
+
+  ECRRepositoryUri:
+    Description: "ECR repository URI for container images"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/govwatcher-govwatcher:lambda"
+    Export:
+      Name: !Sub "${AWS::StackName}-ECRRepository"
+
+  DashboardUrl:
+    Description: "CloudWatch Dashboard URL"
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${GovWatcherDashboard}"
+
+  SubscriptionAgentArn:
+    Description: "SubscriptionAgent Lambda function ARN"
+    Value: !GetAtt SubscriptionAgentFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-SubscriptionAgentArn"
+
+  AnalysisAgentArn:
+    Description: "AnalysisAgent Lambda function ARN"
+    Value: !GetAtt AnalysisAgentFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-AnalysisAgentArn"
+
+  MailAgentArn:
+    Description: "MailAgent Lambda function ARN"
+    Value: !GetAtt MailAgentFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-MailAgentArn" 

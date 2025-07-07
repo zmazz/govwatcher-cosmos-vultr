@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: govwatcher-postgres
+    environment:
+      POSTGRES_DB: govwatcher
+      POSTGRES_USER: govwatcher
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strongpassword123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govwatcher"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Web UI Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: govwatcher-web
+    environment:
+      - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLAMA_API_KEY=${LLAMA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@govwatcher.com}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - governance_data:/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Subscription Agent
+  subscription-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: govwatcher-subscription-agent
+    environment:
+      - AGENT_TYPE=subscription
+      - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
+      - UAGENTS_PRIVATE_KEY=${UAGENTS_PRIVATE_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "on-failure:5"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('Agent healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Watcher Agent
+  watcher-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: govwatcher-watcher-agent
+    environment:
+      - AGENT_TYPE=watcher
+      - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
+      - UAGENTS_PRIVATE_KEY=${UAGENTS_PRIVATE_KEY}
+      - COSMOSHUB_RPC_ENDPOINT=${COSMOSHUB_RPC_ENDPOINT:-https://cosmos-rpc.polkachu.com}
+      - OSMOSIS_RPC_ENDPOINT=${OSMOSIS_RPC_ENDPOINT:-https://osmosis-rpc.polkachu.com}
+      - JUNO_RPC_ENDPOINT=${JUNO_RPC_ENDPOINT:-https://juno-rpc.polkachu.com}
+      - FETCH_RPC_ENDPOINT=${FETCH_RPC_ENDPOINT:-https://fetch-rpc.polkachu.com}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "on-failure:5"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('Agent healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Analysis Agent
+  analysis-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: govwatcher-analysis-agent
+    environment:
+      - AGENT_TYPE=analysis
+      - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
+      - UAGENTS_PRIVATE_KEY=${UAGENTS_PRIVATE_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLAMA_API_KEY=${LLAMA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "on-failure:5"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('Agent healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Mail Agent
+  mail-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: govwatcher-mail-agent
+    environment:
+      - AGENT_TYPE=mail
+      - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
+      - UAGENTS_PRIVATE_KEY=${UAGENTS_PRIVATE_KEY}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@govwatcher.com}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "on-failure:5"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('Agent healthy')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: govwatcher-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  governance_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge 

@@ -1,0 +1,93 @@
+# Cosmos Gov-Watcher SaaS Dependencies
+
+# uAgents framework
+uagents>=0.11.0
+
+# AWS SDK and services (kept for compatibility)
+boto3>=1.34.0
+botocore>=1.34.0
+
+# AI/ML APIs
+openai>=1.12.0
+groq>=0.4.0  # Groq API client
+huggingface-hub>=0.20.0  # For Llama model integration
+transformers>=4.36.0  # For local model inference
+
+# Web Framework and UI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+jinja2>=3.1.0
+python-multipart>=0.0.6  # For form data handling
+
+# Database and ORM
+psycopg2-binary>=2.9.9  # PostgreSQL adapter
+sqlalchemy>=2.0.0  # Database ORM
+alembic>=1.13.0  # Database migrations
+
+# Authentication and Security
+pyjwt>=2.8.0  # JWT token handling
+passlib[bcrypt]>=1.7.4  # Password hashing
+python-jose[cryptography]>=3.3.0  # JWT security
+
+# Email and Communications
+aiosmtplib>=3.0.0  # Async SMTP client
+email-validator>=2.1.0  # Email validation
+
+# HTTP requests and API calls
+requests>=2.31.0
+aiohttp>=3.9.0
+httpx>=0.25.0  # Modern HTTP client
+
+# Payment Processing
+stripe>=7.0.0  # Stripe payment integration
+
+# Authentication & SSO
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+# microsoft-graph-auth>=0.2.0  # Removed - package not available
+github3.py>=4.0.1
+
+# Cryptography & Blockchain
+pycryptodome>=3.19.0
+ecdsa>=0.18.0
+bip_utils>=2.7.0
+
+# System monitoring
+psutil>=5.9.0
+
+# Cosmos SDK integration
+cosmpy>=0.9.0
+
+# JSON and data handling
+pydantic[email]>=2.5.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Date/time utilities
+python-dateutil>=2.8.2
+
+# Logging and monitoring
+structlog>=23.2.0
+
+# Vector embeddings for preference learning
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Async utilities
+asyncio-mqtt>=0.13.0  # For agent communication
+celery>=5.3.0  # Task queue for background jobs
+
+# Testing (for development)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+moto>=4.2.0  # AWS mocking for tests
+pytest-postgresql>=5.0.0  # PostgreSQL testing
+
+# Type hints
+typing-extensions>=4.9.0 
+
+# Development tools
+black>=23.12.0  # Code formatting
+flake8>=6.1.0  # Code linting
+mypy>=1.7.0  # Static type checking 
