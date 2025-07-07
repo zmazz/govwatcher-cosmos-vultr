@@ -747,7 +747,9 @@
     </div>
 
     <!-- Hidden data container for JavaScript -->
-    <div id="proposalsData" style="display: none;" data-proposals="{{ proposals_json | safe }}"></div>
+    <script id="proposalsData" type="application/json">{{ proposals_json | safe }}</script>
+    
+
 
     <!-- Proposal Detail Modal -->
     <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
@@ -791,47 +793,45 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Get proposals data from hidden script element with better error handling
-        const proposalsDataElement = document.getElementById('proposalsData');
+        // Global variable to store proposals data
         let proposalsData = [];
-        
-        console.log('Starting proposal data loading...');
-        
-        try {
-            if (proposalsDataElement) {
-                const dataString = proposalsDataElement.getAttribute('data-proposals');
-                console.log('Raw data string length:', dataString ? dataString.length : 'null');
-                console.log('Raw data string:', dataString ? dataString.substring(0, 100) + '...' : 'null');
-                
-                if (dataString && dataString.trim() !== '') {
-                    proposalsData = JSON.parse(dataString);
-                    console.log('Successfully loaded proposals data:', proposalsData.length, 'proposals');
-                    
-                    // Log first proposal for debugging
-                    if (proposalsData.length > 0) {
-                        console.log('First proposal:', {
-                            id: proposalsData[0].id,
-                            title: proposalsData[0].title,
-                            chain_name: proposalsData[0].chain_name
-                        });
-                    }
-                } else {
-                    console.error('Data string is empty or null');
-                    proposalsData = [];
-                }
-            } else {
-                console.error('proposalsData element not found');
-            }
-        } catch (error) {
-            console.error('Error parsing proposals data:', error);
-            console.error('Error details:', error.message);
-            console.error('Raw data that caused error:', proposalsDataElement ? proposalsDataElement.getAttribute('data-proposals') : 'element not found');
-            proposalsData = [];
-        }
         
         // Set confidence bar widths dynamically
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, setting up proposal cards...');
+            console.log('DOM loaded, loading proposals data...');
+            
+            // Get proposals data from script tag with JSON content
+            const proposalsDataElement = document.getElementById('proposalsData');
+            
+            console.log('Starting proposal data loading...');
+            
+            try {
+                if (proposalsDataElement) {
+                    const dataString = proposalsDataElement.textContent || proposalsDataElement.innerText;
+                    
+                    if (dataString && dataString.trim() !== '') {
+                        try {
+                            proposalsData = JSON.parse(dataString);
+                            console.log('Successfully loaded proposals data:', proposalsData.length, 'proposals');
+                        } catch (parseError) {
+                            console.error('JSON parsing failed:', parseError);
+                            console.error('JSON content:', dataString.substring(0, 200) + '...');
+                            proposalsData = [];
+                        }
+                    } else {
+                        console.error('Data string is empty or null');
+                        proposalsData = [];
+                    }
+                } else {
+                    console.error('proposalsData script element not found');
+                }
+            } catch (error) {
+                console.error('Error parsing proposals data:', error);
+                console.error('Error details:', error.message);
+                proposalsData = [];
+            }
+            
+            console.log('Setting up proposal cards...');
             console.log('Proposals data available:', proposalsData.length);
             
             const confidenceFills = document.querySelectorAll('.confidence-fill');

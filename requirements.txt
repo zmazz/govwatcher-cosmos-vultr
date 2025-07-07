@@ -91,3 +91,5 @@ typing-extensions>=4.9.0
 black>=23.12.0  # Code formatting
 flake8>=6.1.0  # Code linting
 mypy>=1.7.0  # Static type checking 
+
+structlog>=23.2.0

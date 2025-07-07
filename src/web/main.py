@@ -72,6 +72,7 @@ templates = Jinja2Templates(directory="src/web/templates")
 ai_analyzer = HybridAIAnalyzer()
 
 # File paths for persistent storage
+GOVERNANCE_FILE = "/tmp/governance_updates.json"
 ANALYSIS_CACHE_FILE = "/tmp/proposal_analysis_cache.json"
 POLICY_CACHE_FILE = "/tmp/organization_policy.json"
 
@@ -130,11 +131,10 @@ def save_analysis_cache(cache: Dict[str, Any]) -> bool:
         return False
 
 def load_governance_data() -> List[Dict[str, Any]]:
-    """Load governance data from the updater service."""
+    """Load governance data from the governance updates file (written by background service)."""
     try:
-        governance_file = "/tmp/governance_updates.json"
-        if os.path.exists(governance_file):
-            with open(governance_file, 'r') as f:
+        if os.path.exists(GOVERNANCE_FILE):
+            with open(GOVERNANCE_FILE, 'r') as f:
                 data = json.load(f)
                 logger.info(f"Loaded {len(data)} governance updates from file")
                 return data
@@ -311,7 +311,7 @@ async def analyze_single_proposal_with_hash(proposal_hash: str, proposal: Dict[s
 async def process_governance_proposals() -> List[Dict[str, Any]]:
     """Process governance proposals with efficient AI analysis."""
     try:
-        # Load governance data
+        # Load governance data from file (written by background service)
         governance_data = load_governance_data()
         if not governance_data:
             logger.warning("No governance data available")
@@ -345,7 +345,7 @@ async def process_governance_proposals() -> List[Dict[str, Any]]:
                 }
                 proposals.append(proposal_data)
         
-        # Analyze new proposals efficiently
+        # Analyze new proposals efficiently (only run LLM for new proposals)
         await analyze_new_proposals(proposals, policy)
         
         # Build final processed proposals with cached analyses
