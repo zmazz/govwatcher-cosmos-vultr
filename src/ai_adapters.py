@@ -106,7 +106,7 @@ class OpenAIAdapter(AIAdapter):
             return self._fallback_analysis(proposal, policy)
     
     def _build_analysis_prompt(self, proposal: Dict[str, Any], policy: Dict[str, Any]) -> str:
-        """Build comprehensive analysis prompt for OpenAI."""
+        """Build comprehensive analysis prompt for OpenAI with detailed SWOT analysis."""
         
         # Extract key proposal details for more specific analysis
         title = proposal.get('title', 'Unknown')
@@ -130,13 +130,14 @@ class OpenAIAdapter(AIAdapter):
         - {proposal_category} proposal types and their implications
         - Cross-chain governance patterns and risk assessment
         - Regulatory compliance and institutional risk management
+        - Strategic analysis frameworks including SWOT, PESTEL, and risk assessment
         
         CHAIN CONTEXT:
         {chain_context}
         
         PROPOSAL DETAILS:
         Title: {title}
-        Description: {description[:500]}{'...' if len(description) > 500 else ''}
+        Description: {description[:1000]}{'...' if len(description) > 1000 else ''}
         Chain: {chain_name} ({chain_id})
         Type: {proposal_type}
         Category: {proposal_category}
@@ -154,6 +155,43 @@ class OpenAIAdapter(AIAdapter):
         SPECIALIZED ANALYSIS REQUIREMENTS:
         {specialized_prompt}
         
+        COMPREHENSIVE ANALYSIS REQUIREMENTS:
+        
+        1. **SWOT ANALYSIS** (Strengths, Weaknesses, Opportunities, Threats):
+           - STRENGTHS: What advantages does this proposal provide to the {chain_name} ecosystem?
+           - WEAKNESSES: What are the potential drawbacks or limitations of this proposal?
+           - OPPORTUNITIES: What positive outcomes or benefits could this proposal enable?
+           - THREATS: What risks or negative consequences could this proposal introduce?
+        
+        2. **PESTEL ANALYSIS** (Political, Economic, Social, Technological, Environmental, Legal):
+           - POLITICAL: Governance implications, voting power distribution, community dynamics
+           - ECONOMIC: Token economics, inflation/deflation, fee structures, market impact
+           - SOCIAL: Community adoption, user experience, developer ecosystem
+           - TECHNOLOGICAL: Technical complexity, implementation feasibility, security considerations
+           - ENVIRONMENTAL: Energy consumption, sustainability, long-term viability
+           - LEGAL: Regulatory compliance, legal risks, jurisdictional considerations
+        
+        3. **RISK ASSESSMENT FRAMEWORK**:
+           - Technical Risk: Implementation complexity, upgrade risks, security vulnerabilities
+           - Economic Risk: Token value impact, inflation effects, market volatility
+           - Governance Risk: Voting mechanism changes, power concentration, community backlash
+           - Operational Risk: Timeline delays, resource requirements, maintenance burden
+           - Strategic Risk: Ecosystem positioning, competitive landscape, long-term viability
+        
+        4. **STAKEHOLDER IMPACT ANALYSIS**:
+           - Validators: How does this affect validator operations, rewards, and responsibilities?
+           - Delegators: Impact on staking rewards, voting power, and token value
+           - Developers: Changes to development environment, API modifications, integration requirements
+           - Users: User experience changes, fee modifications, feature additions/removals
+           - Institutions: Compliance implications, regulatory considerations, institutional adoption
+        
+        5. **IMPLEMENTATION ROADMAP ASSESSMENT**:
+           - Technical Feasibility: Can this be implemented with current technology?
+           - Timeline Realism: Are the proposed timelines achievable?
+           - Resource Requirements: What resources (human, technical, financial) are needed?
+           - Rollback Strategy: What happens if implementation fails?
+           - Testing Requirements: What testing and validation is needed?
+        
         CRITICAL ANALYSIS FACTORS:
         1. **Chain-Specific Impact**: How does this proposal affect {chain_name}'s unique features and ecosystem?
         2. **Economic Implications**: Token economics, validator rewards, inflation, fee structures
@@ -164,23 +202,71 @@ class OpenAIAdapter(AIAdapter):
         7. **Implementation Feasibility**: Technical complexity, timeline, resource requirements
         8. **Stakeholder Impact**: Validators, delegators, developers, users, institutions
         
-        Provide your analysis in the following JSON format (respond ONLY with valid JSON):
+        Provide your analysis in the following comprehensive JSON format (respond ONLY with valid JSON):
         {{
             "recommendation": "APPROVE|REJECT|ABSTAIN",
             "confidence": <0-100 integer>,
-            "reasoning": "<specific 2-3 sentence reasoning based on proposal content and chain context>",
+            "reasoning": "<detailed 10-15 sentence reasoning incorporating SWOT analysis and key considerations>",
             "risk_assessment": "LOW|MEDIUM|HIGH",
             "policy_alignment": <0-100 integer>,
             "economic_impact": "POSITIVE|NEGATIVE|NEUTRAL",
             "security_implications": "MINIMAL|MODERATE|SIGNIFICANT",
+            "swot_analysis": {{
+                "strengths": [
+                    "<specific strength 1>",
+                    "<specific strength 2>",
+                    "<specific strength 3>"
+                ],
+                "weaknesses": [
+                    "<specific weakness 1>",
+                    "<specific weakness 2>",
+                    "<specific weakness 3>"
+                ],
+                "opportunities": [
+                    "<specific opportunity 1>",
+                    "<specific opportunity 2>",
+                    "<specific opportunity 3>"
+                ],
+                "threats": [
+                    "<specific threat 1>",
+                    "<specific threat 2>",
+                    "<specific threat 3>"
+                ]
+            }},
+            "pestel_analysis": {{
+                "political": "<political implications and governance considerations>",
+                "economic": "<economic impact on token value, inflation, fees, etc.>",
+                "social": "<social impact on community, adoption, user experience>",
+                "technological": "<technical complexity, implementation challenges, security>",
+                "environmental": "<energy consumption, sustainability considerations>",
+                "legal": "<regulatory compliance, legal risks, jurisdictional issues>"
+            }},
+            "stakeholder_impact": {{
+                "validators": "<impact on validator operations and rewards>",
+                "delegators": "<impact on staking rewards and voting power>",
+                "developers": "<impact on development environment and APIs>",
+                "users": "<impact on user experience and fees>",
+                "institutions": "<impact on institutional adoption and compliance>"
+            }},
+            "implementation_assessment": {{
+                "technical_feasibility": "LOW|MEDIUM|HIGH",
+                "timeline_realism": "LOW|MEDIUM|HIGH",
+                "resource_requirements": "<human, technical, financial resources needed>",
+                "rollback_strategy": "<what happens if implementation fails>",
+                "testing_requirements": "<testing and validation needed>"
+            }},
             "key_considerations": [
                 "<chain-specific consideration>",
                 "<economic/technical consideration>",
-                "<governance/compliance consideration>"
+                "<governance/compliance consideration>",
+                "<implementation consideration>",
+                "<stakeholder consideration>"
             ],
             "implementation_risk": "LOW|MEDIUM|HIGH",
-            "chain_specific_notes": "<notes about {chain_name} specific implications>",
-            "timeline_urgency": "LOW|MEDIUM|HIGH"
+            "chain_specific_notes": "<detailed notes about {chain_name} specific implications>",
+            "timeline_urgency": "LOW|MEDIUM|HIGH",
+            "long_term_viability": "LOW|MEDIUM|HIGH",
+            "ecosystem_impact": "POSITIVE|NEGATIVE|NEUTRAL"
         }}
         """
     
@@ -443,28 +529,73 @@ class GroqAdapter(AIAdapter):
             return self._fallback_analysis(proposal, policy)
     
     def _build_analysis_prompt(self, proposal: Dict[str, Any], policy: Dict[str, Any]) -> str:
-        """Build analysis prompt for Groq."""
-        return f"""
-        You are an expert governance analyst for Cosmos blockchain ecosystems. 
-        Analyze the following proposal against the organization's policy and provide a recommendation.
+        """Build comprehensive analysis prompt for Groq with SWOT analysis."""
+        title = proposal.get('title', 'Unknown')
+        description = proposal.get('description', 'No description')
+        chain_name = proposal.get('chain_name', 'Unknown')
+        chain_id = proposal.get('chain_id', 'Unknown')
         
-        PROPOSAL:
-        Title: {proposal.get('title', 'Unknown')}
-        Description: {proposal.get('description', 'No description')}
-        Chain: {proposal.get('chain_id', 'Unknown')}
+        return f"""
+        You are an expert blockchain governance analyst specializing in {chain_name} ({chain_id}) ecosystem. 
+        Provide a comprehensive analysis including SWOT analysis, stakeholder impact, and implementation assessment.
+        
+        PROPOSAL DETAILS:
+        Title: {title}
+        Description: {description[:1000]}{'...' if len(description) > 1000 else ''}
+        Chain: {chain_name} ({chain_id})
         Type: {proposal.get('type', 'Unknown')}
         
         ORGANIZATION POLICY:
         Risk Tolerance: {policy.get('risk_tolerance', 'MEDIUM')}
         Voting Criteria: {json.dumps(policy.get('voting_criteria', {}), indent=2)}
         
-        Provide your analysis in the following JSON format:
+        ANALYSIS REQUIREMENTS:
+        1. **SWOT Analysis**: Strengths, Weaknesses, Opportunities, Threats
+        2. **Stakeholder Impact**: Validators, Delegators, Developers, Users, Institutions
+        3. **Implementation Assessment**: Technical feasibility, timeline, resources, risks
+        4. **Risk Assessment**: Technical, Economic, Governance, Operational, Strategic risks
+        
+        Provide comprehensive analysis in JSON format:
         {{
             "recommendation": "APPROVE|REJECT|ABSTAIN",
             "confidence": <0-100>,
-            "reasoning": "<detailed reasoning>",
+            "reasoning": "<detailed 4-6 sentence reasoning incorporating SWOT analysis>",
             "risk_assessment": "LOW|MEDIUM|HIGH",
-            "policy_alignment": <0-100>
+            "policy_alignment": <0-100>,
+            "economic_impact": "POSITIVE|NEGATIVE|NEUTRAL",
+            "security_implications": "MINIMAL|MODERATE|SIGNIFICANT",
+            "swot_analysis": {{
+                "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
+                "weaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
+                "opportunities": ["<opportunity 1>", "<opportunity 2>", "<opportunity 3>"],
+                "threats": ["<threat 1>", "<threat 2>", "<threat 3>"]
+            }},
+            "stakeholder_impact": {{
+                "validators": "<impact on validators>",
+                "delegators": "<impact on delegators>",
+                "developers": "<impact on developers>",
+                "users": "<impact on users>",
+                "institutions": "<impact on institutions>"
+            }},
+            "implementation_assessment": {{
+                "technical_feasibility": "LOW|MEDIUM|HIGH",
+                "timeline_realism": "LOW|MEDIUM|HIGH",
+                "resource_requirements": "<resources needed>",
+                "rollback_strategy": "<rollback plan>",
+                "testing_requirements": "<testing needed>"
+            }},
+            "key_considerations": [
+                "<consideration 1>",
+                "<consideration 2>",
+                "<consideration 3>",
+                "<consideration 4>",
+                "<consideration 5>"
+            ],
+            "implementation_risk": "LOW|MEDIUM|HIGH",
+            "chain_specific_notes": "<{chain_name} specific implications>",
+            "timeline_urgency": "LOW|MEDIUM|HIGH",
+            "long_term_viability": "LOW|MEDIUM|HIGH",
+            "ecosystem_impact": "POSITIVE|NEGATIVE|NEUTRAL"
         }}
         """
     

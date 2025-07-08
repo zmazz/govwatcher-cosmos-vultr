@@ -7,6 +7,9 @@ import asyncio
 import aiohttp
 import json
 import os
+import tempfile
+import shutil
+import fcntl
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from uagents import Agent, Context, Protocol
@@ -19,11 +22,81 @@ logger = logging.getLogger(__name__)
 
 # File path for governance updates
 GOVERNANCE_FILE = "/tmp/governance_updates.json"
+GOVERNANCE_BACKUP_FILE = "/tmp/governance_updates.backup.json"
+
+def atomic_write_json(data: List[Dict], filepath: str) -> bool:
+    """
+    Atomically write JSON data to file with backup and error recovery
+    """
+    try:
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, dir=os.path.dirname(filepath))
+        
+        # Write data to temporary file
+        json.dump(data, temp_file, indent=2)
+        temp_file.flush()
+        os.fsync(temp_file.fileno())  # Ensure data is written to disk
+        temp_file.close()
+        
+        # Create backup of existing file if it exists
+        if os.path.exists(filepath):
+            shutil.copy2(filepath, GOVERNANCE_BACKUP_FILE)
+        
+        # Atomic move from temp to final location
+        shutil.move(temp_file.name, filepath)
+        
+        logger.info(f"✅ Successfully wrote {len(data)} proposals to {filepath}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Error writing to {filepath}: {e}")
+        
+        # Try to restore from backup if available
+        if os.path.exists(GOVERNANCE_BACKUP_FILE):
+            try:
+                shutil.copy2(GOVERNANCE_BACKUP_FILE, filepath)
+                logger.info(f"🔄 Restored {filepath} from backup")
+                return True
+            except Exception as restore_error:
+                logger.error(f"❌ Failed to restore from backup: {restore_error}")
+        
+        return False
+
+def load_governance_file() -> List[Dict]:
+    """
+    Safely load governance file with fallback to backup
+    """
+    try:
+        # Try main file first
+        if os.path.exists(GOVERNANCE_FILE):
+            with open(GOVERNANCE_FILE, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+                else:
+                    logger.warning("⚠️ Governance file contains invalid data, trying backup")
+        
+        # Try backup file
+        if os.path.exists(GOVERNANCE_BACKUP_FILE):
+            with open(GOVERNANCE_BACKUP_FILE, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    logger.info("🔄 Loaded governance data from backup file")
+                    return data
+        
+        logger.warning("⚠️ No valid governance file found, starting fresh")
+        return []
+        
+    except Exception as e:
+        logger.error(f"❌ Error loading governance file: {e}")
+        return []
 
 class CosmosRPCClient:
     """Client for interacting with Cosmos RPC endpoints"""
     
     def __init__(self):
+        self.session = None
+        self.session_lock = asyncio.Lock()
         self.chains = {
             # Major Cosmos SDK chains with comprehensive coverage
             'cosmoshub-4': {
@@ -136,20 +209,20 @@ class CosmosRPCClient:
             },
             'kichain-2': {
                 'name': 'Ki Chain',
-                'rpc': 'https://kichain-rpc.polkachu.com',
-                'rest': 'https://kichain-api.polkachu.com',
+                'rpc': 'https://ki-rpc.polkachu.com',
+                'rest': 'https://ki-api.polkachu.com',
                 'chain_id': 'kichain-2'
             },
             'gravity-bridge-3': {
                 'name': 'Gravity Bridge',
-                'rpc': 'https://gravitybridge-rpc.polkachu.com',
-                'rest': 'https://gravitybridge-api.polkachu.com',
+                'rpc': 'https://gravity-bridge-rpc.polkachu.com',
+                'rest': 'https://gravity-bridge-api.polkachu.com',
                 'chain_id': 'gravity-bridge-3'
             },
             'phoenix-1': {
-                'name': 'Terra Classic',
-                'rpc': 'https://terra-classic-rpc.polkachu.com',
-                'rest': 'https://terra-classic-api.polkachu.com',
+                'name': 'Terra Phoenix',
+                'rpc': 'https://phoenix-rpc.polkachu.com',
+                'rest': 'https://phoenix-api.polkachu.com',
                 'chain_id': 'phoenix-1'
             },
             'carbon-1': {
@@ -256,8 +329,8 @@ class CosmosRPCClient:
             },
             'cronos_25-1': {
                 'name': 'Cronos POS',
-                'rpc': 'https://cronos-pos-rpc.polkachu.com',
-                'rest': 'https://cronos-pos-api.polkachu.com',
+                'rpc': 'https://cronos-rpc.polkachu.com',
+                'rest': 'https://cronos-api.polkachu.com',
                 'chain_id': 'cronos_25-1'
             },
             'emoney-3': {
@@ -315,13 +388,34 @@ class CosmosRPCClient:
                 'chain_id': 'sifchain-1'
             }
         }
-        self.session = None
+    
+    async def _ensure_session(self):
+        """Ensure we have a valid session, recreate if needed"""
+        async with self.session_lock:
+            try:
+                if self.session is None or self.session.closed:
+                    logger.debug("🔄 Creating new aiohttp session")
+                    self.session = aiohttp.ClientSession(
+                        timeout=aiohttp.ClientTimeout(total=30),
+                        connector=aiohttp.TCPConnector(limit=100, limit_per_host=10)
+                    )
+                return self.session
+            except Exception as e:
+                logger.error(f"❌ Error creating session: {e}")
+                # Try to create a new session even if there was an error
+                try:
+                    self.session = aiohttp.ClientSession(
+                        timeout=aiohttp.ClientTimeout(total=30),
+                        connector=aiohttp.TCPConnector(limit=100, limit_per_host=10)
+                    )
+                    return self.session
+                except Exception as e2:
+                    logger.error(f"❌ Failed to create session after error: {e2}")
+                    return None
     
     async def get_session(self):
-        """Get or create aiohttp session"""
-        if self.session is None:
-            self.session = aiohttp.ClientSession()
-        return self.session
+        """Get or create aiohttp session - DEPRECATED, use _ensure_session instead"""
+        return await self._ensure_session()
     
     async def fetch_active_proposals(self, chain_id: str) -> List[Dict]:
         """Fetch active governance proposals from a specific chain"""
@@ -329,7 +423,12 @@ class CosmosRPCClient:
             return None
         
         config = self.chains[chain_id]
-        session = await self.get_session()
+        
+        # Ensure we have a valid session
+        session = await self._ensure_session()
+        if session is None:
+            logger.error(f"❌ Cannot create session for {config['name']}")
+            return None
         
         try:
             # Fetch proposals in voting period (status=2)
@@ -360,9 +459,31 @@ class CosmosRPCClient:
                 else:
                     logger.warning(f"Failed to fetch proposals for {config['name']}: HTTP {response.status}")
                     return None  # Return None to indicate failure, not empty list
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error fetching proposals for {config['name']}: {e}")
+            # Recreate session on network errors
+            await self._recreate_session()
+            return None
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout fetching proposals for {config['name']}")
+            return None
         except Exception as e:
             logger.error(f"Error fetching proposals for {config['name']}: {e}")
+            # Check if it's a session-related error
+            if "Event loop is closed" in str(e) or "session" in str(e).lower():
+                await self._recreate_session()
             return None  # Return None to indicate failure, not empty list
+    
+    async def _recreate_session(self):
+        """Recreate the session after errors"""
+        async with self.session_lock:
+            try:
+                if self.session and not self.session.closed:
+                    await self.session.close()
+                self.session = None
+                logger.info("🔄 Recreated aiohttp session after error")
+            except Exception as e:
+                logger.error(f"❌ Error recreating session: {e}")
     
     async def fetch_all_proposals(self) -> List[Dict]:
         """Fetch proposals from all monitored chains"""
@@ -394,7 +515,11 @@ class CosmosRPCClient:
             return {}
         
         config = self.chains[chain_id]
-        session = await self.get_session()
+        
+        # Ensure we have a valid session
+        session = await self._ensure_session()
+        if session is None:
+            return {'chain_id': chain_id, 'error': 'Cannot create session'}
         
         try:
             async with session.get(f"{config['rpc']}/status", timeout=10) as response:
@@ -410,13 +535,19 @@ class CosmosRPCClient:
                     }
                 else:
                     return {'chain_id': chain_id, 'error': f"HTTP {response.status}"}
+        except aiohttp.ClientError as e:
+            return {'chain_id': chain_id, 'error': f"Network error: {e}"}
+        except asyncio.TimeoutError:
+            return {'chain_id': chain_id, 'error': 'Timeout'}
         except Exception as e:
             return {'chain_id': chain_id, 'error': str(e)}
     
     async def close(self):
         """Close the aiohttp session"""
-        if self.session:
-            await self.session.close()
+        async with self.session_lock:
+            if self.session and not self.session.closed:
+                await self.session.close()
+                self.session = None
 
 async def initialize_governance_file():
     """Initialize the governance file with current proposals at startup"""
@@ -439,25 +570,24 @@ async def initialize_governance_file():
             }
             updates.append(update_data)
         
-        # Write to file
-        with open(GOVERNANCE_FILE, 'w') as f:
-            json.dump(updates, f, indent=2)
-        
-        logger.info(f"✅ Initialized governance file with {len(updates)} proposals")
+        # Use atomic write with backup
+        if atomic_write_json(updates, GOVERNANCE_FILE):
+            logger.info(f"✅ Initialized governance file with {len(updates)} proposals")
+        else:
+            logger.error("❌ Failed to initialize governance file")
         
     except Exception as e:
         logger.error(f"❌ Error initializing governance file: {e}")
         # Create empty file if error
-        try:
-            with open(GOVERNANCE_FILE, 'w') as f:
-                json.dump([], f)
-        except Exception as write_error:
-            logger.error(f"Failed to create empty governance file: {write_error}")
+        atomic_write_json([], GOVERNANCE_FILE)
 
 async def update_governance_file():
-    """Update the governance file with current proposals"""
+    """Update the governance file with current proposals - BULLETPROOF VERSION"""
     try:
         logger.info("🔄 Updating governance file...")
+        
+        # Load existing data safely
+        existing_updates = load_governance_file()
         
         # Fetch all active proposals
         proposals = await rpc_client.fetch_all_proposals()
@@ -466,13 +596,6 @@ async def update_governance_file():
         if not proposals:
             logger.warning("⚠️ No proposals fetched - likely connection issues. Keeping existing file.")
             return
-        
-        # Load existing updates
-        try:
-            with open(GOVERNANCE_FILE, 'r') as f:
-                existing_updates = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            existing_updates = []
         
         # Create a map of existing proposals for quick lookup
         existing_proposals = {}
@@ -532,14 +655,15 @@ async def update_governance_file():
         # Sort by timestamp (newest first)
         final_updates.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
         
-        # Write updated file
-        with open(GOVERNANCE_FILE, 'w') as f:
-            json.dump(final_updates, f, indent=2)
-        
-        logger.info(f"✅ Updated governance file: {new_count} new, {updated_count} updated, {removed_count} removed, {len(final_updates)} total")
+        # Use atomic write with backup
+        if atomic_write_json(final_updates, GOVERNANCE_FILE):
+            logger.info(f"✅ Updated governance file: {new_count} new, {updated_count} updated, {removed_count} removed, {len(final_updates)} total")
+        else:
+            logger.error("❌ Failed to update governance file - keeping existing data")
         
     except Exception as e:
         logger.error(f"❌ Error updating governance file: {e}")
+        # Don't overwrite existing data on error
 
 # Create the watcher agent
 watcher = Agent(
@@ -558,27 +682,39 @@ fund_agent_if_low(watcher.wallet.address())
 # Protocol for governance monitoring
 governance_protocol = Protocol("GovernanceMonitoring")
 
-@governance_protocol.on_interval(period=300.0)  # Check every 5 minutes
+@governance_protocol.on_interval(period=3600.0)  # Check every 1 hour
 async def monitor_governance_proposals(ctx: Context):
-    """Monitor governance proposals across all chains"""
+    """Monitor governance proposals across all chains - BULLETPROOF VERSION"""
     try:
+        logger.info("🕐 Starting hourly governance check...")
         await update_governance_file()
+        logger.info("✅ Hourly governance check completed")
     except Exception as e:
-        logger.error(f"Error in periodic monitoring: {e}")
+        logger.error(f"❌ Error in hourly monitoring: {e}")
 
-@governance_protocol.on_interval(period=60.0)  # Check every minute
+@governance_protocol.on_interval(period=300.0)  # Check every 5 minutes for health
 async def health_check(ctx: Context):
-    """Regular health check"""
+    """Regular health check - more frequent than governance updates"""
     try:
-        # Check connection to all chains
-        for chain_id in rpc_client.chains.keys():
-            status = await rpc_client.get_chain_status(chain_id)
-            if 'error' in status:
-                logger.warning(f"⚠️ Connection issue with {chain_id}: {status['error']}")
-            else:
-                logger.debug(f"✅ {status['chain_name']} - Block: {status['latest_block_height']}")
+        # Check session health first
+        session = await rpc_client._ensure_session()
+        if session is None:
+            logger.error("❌ Health check - Cannot create session")
+            return
+        
+        # Check connection to a subset of chains for health monitoring
+        health_chains = ['cosmoshub-4', 'osmosis-1', 'juno-1', 'akashnet-2']
+        for chain_id in health_chains:
+            if chain_id in rpc_client.chains:
+                status = await rpc_client.get_chain_status(chain_id)
+                if 'error' in status:
+                    logger.warning(f"⚠️ Health check - Connection issue with {chain_id}: {status['error']}")
+                else:
+                    logger.debug(f"✅ Health check - {status['chain_name']} - Block: {status['latest_block_height']}")
     except Exception as e:
         logger.error(f"Health check failed: {e}")
+        # Try to recreate session on health check failure
+        await rpc_client._recreate_session()
 
 # Include the protocol in the agent
 watcher.include(governance_protocol)
@@ -608,6 +744,11 @@ if __name__ == "__main__":
         
     except KeyboardInterrupt:
         logger.info("👋 Shutting down watcher agent...")
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
     finally:
         # Clean up
-        asyncio.run(rpc_client.close()) 
+        try:
+            asyncio.run(rpc_client.close())
+        except Exception as e:
+            logger.error(f"❌ Error during cleanup: {e}") 
