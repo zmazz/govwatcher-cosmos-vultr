@@ -326,7 +326,7 @@ class CosmosRPCClient:
     async def fetch_active_proposals(self, chain_id: str) -> List[Dict]:
         """Fetch active governance proposals from a specific chain"""
         if chain_id not in self.chains:
-            return []
+            return None
         
         config = self.chains[chain_id]
         session = await self.get_session()
@@ -359,19 +359,32 @@ class CosmosRPCClient:
                     return proposals
                 else:
                     logger.warning(f"Failed to fetch proposals for {config['name']}: HTTP {response.status}")
-                    return []
+                    return None  # Return None to indicate failure, not empty list
         except Exception as e:
             logger.error(f"Error fetching proposals for {config['name']}: {e}")
-            return []
+            return None  # Return None to indicate failure, not empty list
     
     async def fetch_all_proposals(self) -> List[Dict]:
         """Fetch proposals from all monitored chains"""
         all_proposals = []
+        successful_chains = 0
+        total_chains = len(self.chains)
         
         for chain_id in self.chains.keys():
             proposals = await self.fetch_active_proposals(chain_id)
-            all_proposals.extend(proposals)
-            logger.info(f"Fetched {len(proposals)} proposals from {self.chains[chain_id]['name']}")
+            if proposals is not None:  # None indicates failure, empty list [] is success
+                successful_chains += 1
+                all_proposals.extend(proposals)
+                logger.info(f"Fetched {len(proposals)} proposals from {self.chains[chain_id]['name']}")
+            else:
+                logger.warning(f"Failed to fetch from {self.chains[chain_id]['name']}")
+        
+        logger.info(f"📊 Successfully connected to {successful_chains}/{total_chains} chains, found {len(all_proposals)} total proposals")
+        
+        # Only return proposals if we successfully connected to at least 25% of chains
+        if successful_chains < (total_chains * 0.25):
+            logger.error(f"❌ Too many connection failures ({successful_chains}/{total_chains} successful). Not updating governance file.")
+            return []
         
         return all_proposals
     
@@ -448,6 +461,11 @@ async def update_governance_file():
         
         # Fetch all active proposals
         proposals = await rpc_client.fetch_all_proposals()
+        
+        # Don't update if we got no proposals (likely connection issues)
+        if not proposals:
+            logger.warning("⚠️ No proposals fetched - likely connection issues. Keeping existing file.")
+            return
         
         # Load existing updates
         try:

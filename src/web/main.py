@@ -139,8 +139,14 @@ def load_governance_data() -> List[Dict[str, Any]]:
                 logger.info(f"Loaded {len(data)} governance updates from file")
                 return data
         else:
-            logger.warning("Governance updates file not found, using demo data")
-            return []
+            if os.path.exists(ANALYSIS_CACHE_FILE):
+                with open(ANALYSIS_CACHE_FILE, 'r') as f:
+                    data = json.load(f)
+                    logger.info(f"Loaded {len(data)} governance updates from file")
+                    return data
+            else:
+                logger.warning("Governance updates file not found, using demo data")
+                return []
     except Exception as e:
         logger.error(f"Error loading governance data: {e}")
         return []

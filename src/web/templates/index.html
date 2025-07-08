@@ -183,26 +183,40 @@
                                 <!-- Demo Access -->
                                 <div class="tab-pane fade show active" id="demo" role="tabpanel">
                                     <div class="row">
-                                        <div class="col-md-8 mx-auto">
+                                        <div class="col-md-10 mx-auto">
                                             <div class="text-center mb-4">
-                                                <i class="fas fa-eye fa-3x text-primary mb-3"></i>
-                                                <h5>Demo Access</h5>
-                                                <p class="text-muted">Explore the platform with pre-loaded demo data</p>
+                                                <i class="fas fa-flask fa-3x text-warning mb-3"></i>
+                                                <h5>Live Demo with Real Data</h5>
+                                                <p class="text-muted">Experience the platform with live governance data from 48+ Cosmos chains</p>
+                                            </div>
+                                            
+                                            <div class="alert alert-warning">
+                                                <strong><i class="fas fa-construction me-2"></i>Work in Progress (WIP) Demo:</strong><br>
+                                                This is a live demo showcasing the core AI analysis capabilities. Many features are still under development.
+                                            </div>
+                                            
+                                            <div class="alert alert-success">
+                                                <strong><i class="fas fa-check-circle me-2"></i>What's Working Now:</strong><br>
+                                                • <strong>Live Data:</strong> Real governance proposals from 48+ Cosmos chains<br>
+                                                • <strong>AI Analysis:</strong> Automated proposal analysis using OpenAI/Groq<br>
+                                                • <strong>Risk Assessment:</strong> Basic risk scoring and recommendations<br>
+                                                • <strong>Multi-Chain Monitoring:</strong> Osmosis, Akash, Dymension, Regen Network, and more
                                             </div>
                                             
                                             <div class="alert alert-info">
-                                                <strong><i class="fas fa-info-circle me-2"></i>Demo Features:</strong><br>
-                                                • Pre-configured enterprise organization<br>
-                                                • Sample governance proposals and AI analysis<br>
-                                                • Full dashboard functionality<br>
-                                                • Mock compliance reporting
+                                                <strong><i class="fas fa-robot me-2"></i>Future Vision - Fetch.ai uAgents:</strong><br>
+                                                This demo will evolve into a full autonomous agent ecosystem powered by Fetch.ai uAgents, enabling:<br>
+                                                • Autonomous governance participation<br>
+                                                • Cross-chain coordination<br>
+                                                • Advanced multi-agent analysis<br>
+                                                • Decentralized decision making
                                             </div>
                                             
                                             <div class="d-grid gap-2">
-                                                <a href="/dashboard" class="btn btn-primary btn-lg">
-                                                    <i class="fas fa-eye me-2"></i>Enter Demo Dashboard
+                                                <a href="/dashboard" class="btn btn-warning btn-lg">
+                                                    <i class="fas fa-flask me-2"></i>Enter Live Demo (WIP)
                                                 </a>
-                                                <small class="text-muted text-center">No registration required</small>
+                                                <small class="text-muted text-center">No registration required • Live data updates every 5 minutes</small>
                                             </div>
                                         </div>
                                     </div>
@@ -222,12 +236,13 @@
                                             
                                             <div id="walletConnect">
                                                 <div class="d-grid gap-3">
-                                                    <button class="btn btn-outline-success btn-lg" onclick="connectKeplr()">
+                                                    <button class="btn btn-outline-success btn-lg" onclick="connectKeplr()" disabled>
                                                         <i class="fab fa-chrome me-2"></i>Connect Keplr Wallet
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </button>
                                                     <small class="text-muted text-center">
-                                                        <i class="fas fa-info-circle me-1"></i>
-                                                        Make sure you have the Keplr browser extension installed
+                                                        <i class="fas fa-construction me-1"></i>
+                                                        Wallet authentication coming soon
                                                     </small>
                                                 </div>
                                             </div>
@@ -259,21 +274,24 @@
 
                                             <div class="row g-3">
                                                 <div class="col-12">
-                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('google')">
+                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('google')" style="opacity: 0.6; cursor: not-allowed;">
                                                         <i class="fab fa-google text-danger me-3 fs-5"></i>
                                                         <span>Continue with Google</span>
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </a>
                                                 </div>
                                                 <div class="col-12">
-                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('microsoft')">
+                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('microsoft')" style="opacity: 0.6; cursor: not-allowed;">
                                                         <i class="fab fa-microsoft text-primary me-3 fs-5"></i>
                                                         <span>Continue with Microsoft</span>
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </a>
                                                 </div>
                                                 <div class="col-12">
-                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('github')">
+                                                    <a href="#" class="sso-button w-100" onclick="signInWithSSO('github')" style="opacity: 0.6; cursor: not-allowed;">
                                                         <i class="fab fa-github text-dark me-3 fs-5"></i>
                                                         <span>Continue with GitHub</span>
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </a>
                                                 </div>
                                             </div>
@@ -309,8 +327,9 @@
                                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Automatic renewals</li>
                                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>USD pricing</li>
                                                     </ul>
-                                                    <button class="btn btn-primary w-100" onclick="showSubscriptionForm('stripe')">
+                                                    <button class="btn btn-primary w-100" onclick="showSubscriptionForm('stripe')" disabled>
                                                         <i class="fas fa-credit-card me-2"></i>Choose Plan & Pay
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -329,8 +348,9 @@
                                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>On-chain verification</li>
                                                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i>FET token rewards</li>
                                                     </ul>
-                                                    <button class="btn btn-success w-100" onclick="showSubscriptionForm('blockchain')">
+                                                    <button class="btn btn-success w-100" onclick="showSubscriptionForm('blockchain')" disabled>
                                                         <i class="fas fa-coins me-2"></i>Pay with FET
+                                                        <span class="badge bg-warning ms-2">WIP</span>
                                                     </button>
                                                 </div>
                                             </div>
