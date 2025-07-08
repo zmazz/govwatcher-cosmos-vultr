@@ -35,7 +35,7 @@ make deploy-vultr   # Deploy to Vultr VPS
 make check          # Run compliance validation
 ```
 
-📖 **[Complete Structure Guide →](REPOSITORY_STRUCTURE.md)**
+📖 **[Complete Structure Guide →](docs/REPOSITORY_STRUCTURE.md)**
 
 ## 📖 Table of Contents
 
@@ -249,13 +249,13 @@ The system uses the [uAgents framework](https://github.com/fetchai/uAgents) with
 
 ### 📖 **Choose Your Deployment Guide:**
 
-**🏢 Small Business (Recommended)**: [DEPLOYMENT GUIDE](MASTER_DEPLOYMENT_GUIDE_HACKATHON.md) - Vultr VPS + On-Chain in 60 minutes  
-**🏗️ Complete Options**: [MASTER DEPLOYMENT GUIDE](MASTER_DEPLOYMENT_GUIDE.md) - All deployment scenarios A-Z
+**🏢 Small Business (Recommended)**: [DEPLOYMENT GUIDE](docs/MASTER_DEPLOYMENT_GUIDE_HACKATHON.md) - Vultr VPS + On-Chain in 60 minutes  
+**🏗️ Complete Options**: [MASTER DEPLOYMENT GUIDE](docs/MASTER_DEPLOYMENT_GUIDE.md) - All deployment scenarios A-Z
 
 | Guide | Best For | Time | Cost | Features |
 |-------|----------|------|------|----------|
-| **[Quick Guide](MASTER_DEPLOYMENT_GUIDE_HACKATHON.md)** | Small businesses, startups | 60 min | $15-25/month | Vultr VPS + Fetch.ai + Stripe |
-| **[Master Guide](MASTER_DEPLOYMENT_GUIDE.md)** | All scenarios | 30-120 min | $6-120/month | Vultr, AWS, Hybrid, On-Chain |
+| **[Quick Guide](docs/MASTER_DEPLOYMENT_GUIDE_HACKATHON.md)** | Small businesses, startups | 60 min | $15-25/month | Vultr VPS + Fetch.ai + Stripe |
+| **[Master Guide](docs/MASTER_DEPLOYMENT_GUIDE.md)** | All scenarios | 30-120 min | $6-120/month | Vultr, AWS, Hybrid, On-Chain |
 
 ### Quick Commands
 
@@ -285,7 +285,7 @@ cp env.example .env
 ./deploy.sh [vultr|aws|local|onchain|hybrid] deploy
 ```
 
-**📋 For detailed instructions, troubleshooting, and all deployment options, see [MASTER_DEPLOYMENT_GUIDE.md](MASTER_DEPLOYMENT_GUIDE.md)**
+**📋 For detailed instructions, troubleshooting, and all deployment options, see [MASTER_DEPLOYMENT_GUIDE.md](docs/MASTER_DEPLOYMENT_GUIDE.md)**
 
 ### Prerequisites
 
@@ -373,7 +373,7 @@ aws configure
 
 **Perfect for**: Blockchain-native organizations, trustless interactions
 
-See [ONCHAIN.md](ONCHAIN.md) for complete deployment guide.
+See [ONCHAIN.md](docs/ONCHAIN.md) for complete deployment guide.
 
 **Cost**: Gas fees only (~1-10 FET for deployment)
 
@@ -389,7 +389,7 @@ See [ONCHAIN.md](ONCHAIN.md) for complete deployment guide.
 ./deploy.sh deploy
 
 # Deploy on-chain for payments
-# See ONCHAIN.md for instructions
+# See docs/ONCHAIN.md for instructions
 ```
 
 ## 🖥️ Web Dashboard
@@ -877,7 +877,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact & Resources
 
 - **Live Demo**: [Dashboard](http://207.148.31.84:8080/dashboard) | [API](http://207.148.31.84:8080/api/proposals)
-- **Documentation**: [Deployment Guide](MASTER_DEPLOYMENT_GUIDE.md) | [Data Models](DATA_MODEL_DOCUMENTATION.md)
+- **Documentation**: [Complete Docs Index](docs/README.md) | [Deployment Guide](docs/MASTER_DEPLOYMENT_GUIDE.md) | [Data Models](docs/DATA_MODEL_SUMMARY.md)
 - **Local Setup**: `uvicorn src.web.main:app --host 0.0.0.0 --port 8080`
 - **System Validation**: `python scripts/hackathon_check.py`
 - **Project Repository**: [GitHub](https://github.com/

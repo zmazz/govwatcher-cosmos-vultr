@@ -191,9 +191,9 @@ class VultrTrackChecker:
         # Check for Vultr mentions in documentation
         doc_locations = [
             "README.md", 
-            "docs/DEPLOYMENT.md", 
+            "docs/MASTER_DEPLOYMENT_GUIDE.md", 
             "docs/DEPLOYMENT_INSTRUCTIONS.md",
-            "DEPLOYMENT.md"  # Legacy
+            "MASTER_DEPLOYMENT_GUIDE.md"  # Legacy
         ]
         
         for doc_file in doc_locations:
@@ -296,7 +296,7 @@ class VultrTrackChecker:
         doc_locations = [
             "README.md", 
             ".cursor/scratchpad.md",
-            "docs/DEPLOYMENT.md",
+            "docs/MASTER_DEPLOYMENT_GUIDE.md",
             "docs/DEPLOYMENT_INSTRUCTIONS.md"
         ]
         

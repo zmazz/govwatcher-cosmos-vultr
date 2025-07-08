@@ -559,7 +559,7 @@ ssh root@$VPS_IP 'cd /app && docker-compose restart'
 ### 📞 Support & Resources
 
 - **📖 Full Documentation**: See [MASTER_DEPLOYMENT_GUIDE.md](MASTER_DEPLOYMENT_GUIDE.md)
-- **🗄️ Data Model Documentation**: See [DATA_MODEL_DOCUMENTATION.md](DATA_MODEL_DOCUMENTATION.md)
+- **🗄️ Data Model Documentation**: See [DATA_MODEL_SUMMARY.md](DATA_MODEL_SUMMARY.md)
 - **🔧 Technical Issues**: Check logs at `https://YOUR_VPS_IP/status`
 - **💳 Payment Problems**: Verify Stripe/FET configuration in dashboard
 - **🤖 AI Issues**: Test Groq API key at [console.groq.com](https://console.groq.com)

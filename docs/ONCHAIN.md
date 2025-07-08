@@ -5,7 +5,7 @@ This guide covers deploying your Cosmos Governance Risk & Compliance Co-Pilot ag
 ## 📋 Prerequisites
 
 ### Required Infrastructure
-- ✅ **Vultr/AWS Deployment** completed (see [DEPLOYMENT.md](DEPLOYMENT.md))
+- ✅ **Vultr/AWS Deployment** completed (see [MASTER_DEPLOYMENT_GUIDE.md](MASTER_DEPLOYMENT_GUIDE.md))
 - ✅ **Web dashboard** operational at your deployment URL
 - ✅ **AI adapters** (Groq/Llama) configured and tested
 - ✅ **Health endpoints** responding (`/status` endpoint accessible)
@@ -1077,7 +1077,7 @@ Your Cosmos Governance Risk & Compliance Co-Pilot is now fully deployed across:
 
 ### 📞 Support & Resources
 
-- **Documentation**: This guide and [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Documentation**: This guide and [MASTER_DEPLOYMENT_GUIDE.md](MASTER_DEPLOYMENT_GUIDE.md)
 - **Health Checks**: `https://your-vultr-ip/status` and agent health endpoints
 - **AgentVerse**: Your agents are discoverable at https://agentverse.ai
 - **Community**: Join Cosmos and Fetch.ai communities for support

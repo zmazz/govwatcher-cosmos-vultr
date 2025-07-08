@@ -17,7 +17,7 @@ This guide provides comprehensive deployment instructions for the Cosmos Governa
 8. [🚨 Troubleshooting](#-troubleshooting)
 
 **📚 Related Documentation:**
-- [🗄️ Data Model Documentation](DATA_MODEL_DOCUMENTATION.md) - Database schemas and API reference
+- [🗄️ Data Model Documentation](DATA_MODEL_SUMMARY.md) - Database schemas and API reference
 - [🏢 Hackathon Quick Start](MASTER_DEPLOYMENT_GUIDE_HACKATHON.md) - 60-minute setup guide
 
 ---

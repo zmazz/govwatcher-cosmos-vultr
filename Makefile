@@ -140,9 +140,9 @@ clean-docker: ## Clean Docker containers and images
 # Documentation commands
 docs: ## Open documentation
 	@echo "📚 Opening documentation..."
-	@echo "Repository Structure: REPOSITORY_STRUCTURE.md"
+	@echo "Repository Structure: docs/REPOSITORY_STRUCTURE.md"
 	@echo "Deployment Guide: docs/DEPLOYMENT_INSTRUCTIONS.md"
-	@echo "AWS Deployment: docs/DEPLOYMENT.md"
+	@echo "AWS Deployment: docs/MASTER_DEPLOYMENT_GUIDE.md"
 	@echo "On-Chain Guide: docs/ONCHAIN.md"
 
 readme: ## Show quick README
