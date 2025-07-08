@@ -444,7 +444,7 @@ async def analyze_proposal(ctx: Context, sender: str, proposal: NewProposal):
 
 
 @agent.on_event("startup")
-async def startup_handler():
+async def startup_handler(ctx: Context):
     """Agent startup handler."""
     logger.info(
         "AnalysisAgent starting up",
@@ -472,7 +472,7 @@ async def startup_handler():
 
 
 @agent.on_event("shutdown")
-async def shutdown_handler():
+async def shutdown_handler(ctx: Context):
     """Agent shutdown handler."""
     logger.info("AnalysisAgent shutting down")
 

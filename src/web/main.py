@@ -131,22 +131,21 @@ def save_analysis_cache(cache: Dict[str, Any]) -> bool:
         return False
 
 def load_governance_data() -> List[Dict[str, Any]]:
-    """Load governance data from the governance updates file (written by background service)."""
+    """Load governance data from file."""
     try:
         if os.path.exists(GOVERNANCE_FILE):
             with open(GOVERNANCE_FILE, 'r') as f:
                 data = json.load(f)
                 logger.info(f"Loaded {len(data)} governance updates from file")
                 return data
+        elif os.path.exists(ANALYSIS_CACHE_FILE):
+            with open(ANALYSIS_CACHE_FILE, 'r') as f:
+                data = json.load(f)
+                logger.info(f"Loaded {len(data)} governance updates from file")
+                return data
         else:
-            if os.path.exists(ANALYSIS_CACHE_FILE):
-                with open(ANALYSIS_CACHE_FILE, 'r') as f:
-                    data = json.load(f)
-                    logger.info(f"Loaded {len(data)} governance updates from file")
-                    return data
-            else:
-                logger.warning("Governance updates file not found, using demo data")
-                return []
+            logger.warning("Governance updates file not found, using demo data")
+            return []
     except Exception as e:
         logger.error(f"Error loading governance data: {e}")
         return []

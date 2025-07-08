@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strongpassword123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -32,8 +32,8 @@ services:
   # Web UI Application
   web:
     build:
-      context: .
-      dockerfile: Dockerfile.web
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.web
     container_name: govwatcher-web
     environment:
       - DATABASE_URL=postgresql://govwatcher:${POSTGRES_PASSWORD:-strongpassword123}@postgres:5432/govwatcher
@@ -49,7 +49,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - governance_data:/tmp
+      - /tmp:/tmp
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,8 +71,8 @@ services:
   # Subscription Agent
   subscription-agent:
     build:
-      context: .
-      dockerfile: Dockerfile.agents
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.agents
     container_name: govwatcher-subscription-agent
     environment:
       - AGENT_TYPE=subscription
@@ -100,8 +100,8 @@ services:
   # Watcher Agent
   watcher-agent:
     build:
-      context: .
-      dockerfile: Dockerfile.agents
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.agents
     container_name: govwatcher-watcher-agent
     environment:
       - AGENT_TYPE=watcher
@@ -133,8 +133,8 @@ services:
   # Analysis Agent
   analysis-agent:
     build:
-      context: .
-      dockerfile: Dockerfile.agents
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.agents
     container_name: govwatcher-analysis-agent
     environment:
       - AGENT_TYPE=analysis
@@ -165,8 +165,8 @@ services:
   # Mail Agent
   mail-agent:
     build:
-      context: .
-      dockerfile: Dockerfile.agents
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.agents
     container_name: govwatcher-mail-agent
     environment:
       - AGENT_TYPE=mail
@@ -204,8 +204,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
+      - ../../infra/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../../infra/nginx/ssl:/etc/nginx/ssl
     depends_on:
       - web
     restart: unless-stopped
@@ -225,8 +225,6 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
-  governance_data:
     driver: local
 
 networks:
