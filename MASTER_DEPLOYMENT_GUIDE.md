@@ -1,170 +1,150 @@
-# 🌌 Cosmos GRC Co-Pilot - Complete A-Z Deployment Guide
-## From Zero to Production in One Document
+# 🌌 Cosmos GRC Co-Pilot - Complete Deployment Guide
+## From Development to Production
 
-This is the **MASTER DEPLOYMENT GUIDE** that consolidates all deployment scenarios into one comprehensive, step-by-step guide. Follow this document to go from a fresh system to a fully operational Cosmos Governance Risk & Compliance Co-Pilot.
+This guide provides comprehensive deployment instructions for the Cosmos Governance Risk & Compliance Co-Pilot. Choose your deployment method based on your needs and technical requirements.
 
 ---
 
 ## 📋 Table of Contents
 
-1. [🎯 Quick Decision Matrix](#-quick-decision-matrix)
+1. [🎯 Deployment Options Overview](#-deployment-options-overview)
 2. [⚡ Prerequisites & Setup](#-prerequisites--setup)
-3. [🟦 Option A: Vultr VPS (Recommended)](#-option-a-vultr-vps-recommended)
-4. [🟠 Option B: AWS Enterprise](#-option-b-aws-enterprise)
-5. [🔄 Option C: Hybrid Deployment](#-option-c-hybrid-deployment)
-6. [🔗 Option D: On-Chain Integration](#-option-d-on-chain-integration)
-7. [🔧 Multi-Authentication Setup](#-multi-authentication-setup)
-8. [💳 Payment System Configuration](#-payment-system-configuration)
-9. [📊 Monitoring & Validation](#-monitoring--validation)
-10. [🚨 Troubleshooting](#-troubleshooting)
+3. [🟦 Option A: Vultr VPS Deployment](#-option-a-vultr-vps-deployment)
+4. [🟠 Option B: AWS CloudFormation](#-option-b-aws-cloudformation)
+5. [🔄 Option C: Docker Compose (Local)](#-option-c-docker-compose-local)
+6. [🔗 Option D: Hybrid Deployment](#-option-d-hybrid-deployment)
+7. [📊 Monitoring & Validation](#-monitoring--validation)
+8. [🚨 Troubleshooting](#-troubleshooting)
 
-**📚 Additional Documentation:**
-- [🗄️ Complete Data Model Documentation](DATA_MODEL_DOCUMENTATION.md) - Database schemas, function signatures, and system architecture
+**📚 Related Documentation:**
+- [🗄️ Data Model Documentation](DATA_MODEL_DOCUMENTATION.md) - Database schemas and API reference
+- [🏢 Hackathon Quick Start](MASTER_DEPLOYMENT_GUIDE_HACKATHON.md) - 60-minute setup guide
 
 ---
 
-## 🎯 Quick Decision Matrix
+## 🎯 Deployment Options Overview
 
-Choose your deployment path:
+Choose your deployment method:
 
-| Your Situation | Recommended Path | Time | Monthly Cost | Complexity | Guide |
-|----------------|------------------|------|--------------|------------|-------|
-| **Startup/Demo** | Option A (Vultr VPS) | 30 min | $6-12 | ⭐⭐ | [This Guide - Option A](#-option-a-vultr-vps-recommended) |
-| **🏢 Small Business** | **Option A + D (Vultr + On-Chain)** | **60 min** | **$15-25** | **⭐⭐⭐** | **[Hackathon Guide](MASTER_DEPLOYMENT_GUIDE_HACKATHON.md)** |
-| **Enterprise** | Option B (AWS) | 45 min | $25-100 | ⭐⭐⭐ | [This Guide - Option B](#-option-b-aws-enterprise) |
-| **Maximum Features** | Option C (Hybrid) | 90 min | $30-120 | ⭐⭐⭐⭐ | [This Guide - Option C](#-option-c-hybrid-deployment) |
-| **Blockchain Native** | Option D (On-Chain) | 120 min | Gas fees only | ⭐⭐⭐⭐⭐ | [This Guide - Option D](#-option-d-on-chain-integration) |
+| Option | Best For | Time | Monthly Cost | Complexity | Status |
+|--------|----------|------|--------------|------------|---------|
+| **Vultr VPS** | Most users, hackathons | 30 min | $6-12 | ⭐⭐ | ✅ Implemented |
+| **AWS CloudFormation** | Enterprise scale | 45 min | $25-100 | ⭐⭐⭐ | ✅ Implemented |
+| **Docker Compose** | Development/testing | 5 min | Free | ⭐ | ✅ Implemented |
+| **Hybrid** | Maximum flexibility | 60 min | $30-120 | ⭐⭐⭐⭐ | 🔄 Partial |
 
 ---
 
 ## ⚡ Prerequisites & Setup
 
 ### System Requirements
-```bash
-# Required software (install these first)
-- Python 3.11+
-- Docker & Docker Compose
-- Git
-- curl, jq (command line tools)
-- 8GB+ RAM, 20GB+ storage
-```
+- **Operating System**: Linux, macOS, or Windows with WSL2
+- **Python**: 3.11 or higher
+- **Docker**: Latest version with Docker Compose
+- **Memory**: 8GB+ RAM recommended
+- **Storage**: 20GB+ available space
 
-### Step 1: Clone Repository & Environment
+### Step 1: Clone and Setup
 ```bash
-# Clone project
-git clone https://github.com/yourusername/uagents-govwatcher.git
-cd uagents-govwatcher
+# Clone the repository
+git clone https://github.com/yourusername/govwatcher-cosmos-vultr.git
+cd govwatcher-cosmos-vultr
 
-# Create Python environment
+# Create Python virtual environment
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
 
-# Create environment file
-cp env.example .env
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Step 2: Get Required API Keys
+### Step 2: Get API Keys
 
-#### Essential API Keys (Choose one):
+#### Required API Keys
 ```bash
-# GROQ API (Recommended - Fast & Free tier)
-# Get from: https://console.groq.com/
+# Groq API (Primary AI provider)
+# Get from: https://console.groq.com/keys
 GROQ_API_KEY=gsk_your_groq_api_key_here
 
-# OR OpenAI API (Fallback)
+# OpenAI API (Fallback, optional)
 # Get from: https://platform.openai.com/api-keys
 OPENAI_API_KEY=sk_your_openai_api_key_here
 ```
 
-#### Platform-Specific Keys:
+#### Platform-Specific Keys
 ```bash
 # For Vultr deployment
 VULTR_API_KEY=your_vultr_api_key  # Get from: https://my.vultr.com/settings/#settingsapi
 
-# For AWS deployment  
+# For AWS deployment
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-
-# For blockchain deployment
-# We'll generate these automatically
 ```
 
-### Step 3: Basic Environment Configuration
+### Step 3: Configure Environment
 ```bash
-# Edit .env file with essential variables
-nano .env
+# Copy environment template
+cp env.example .env
+
+# Edit with your configuration
+nano .env  # or use your preferred editor
 ```
 
-**Minimum Required Configuration:**
+**Essential Configuration:**
 ```bash
-# Deployment choice
-DEPLOYMENT_TYPE=vultr  # or aws, hybrid, onchain
-
 # AI Configuration (REQUIRED)
 GROQ_API_KEY=gsk_your_groq_api_key_here
 
-# Database (auto-configured for each platform)
-DATABASE_URL=postgresql://govwatcher:secure_password@localhost:5432/govwatcher
+# Database
+DATABASE_URL=sqlite:///./data/govwatcher.db  # Local development
+# DATABASE_URL=postgresql://user:pass@localhost:5432/govwatcher  # Production
 
 # Security
-JWT_SECRET=your_very_long_random_secret_here_minimum_32_characters
+JWT_SECRET=your_very_long_random_secret_key_here
 
-# Email (use Gmail for simplicity)
+# Email (optional, for notifications)
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your_email@gmail.com
-SMTP_PASSWORD=your_gmail_app_password  # Generate at: https://myaccount.google.com/apppasswords
-FROM_EMAIL=noreply@yourdomain.com
+SMTP_PASSWORD=your_app_password
 ```
 
-### Step 4: Generate Security Keys
+### Step 4: Validate Setup
 ```bash
-# Generate JWT secret
-openssl rand -hex 32 >> jwt_secret.txt
-JWT_SECRET=$(cat jwt_secret.txt)
-echo "JWT_SECRET=$JWT_SECRET" >> .env
+# Run compliance check
+python scripts/hackathon_check.py
+# Should show: 🎉 ALL CHECKS PASSED! (9/9)
 
-# Generate uAgents keys (for blockchain features)
-python scripts/generate_uagents_key.py
-```
-
-### Step 5: Test Local Setup
-```bash
-# Validate configuration
+# Test basic functionality
 python scripts/test_basic_setup.py
 
-# Test compliance
-python scripts/hackathon_check.py
-
-# Should see: "🎉 ALL CHECKS PASSED!"
+# Generate test data
+python scripts/generate_governance_data.py
 ```
 
 ---
 
-## 🟦 Option A: Vultr VPS (Recommended)
+## 🟦 Option A: Vultr VPS Deployment
 
-**Perfect for**: Most users, cost-effective, simple setup, Vultr Track compliance
+**Best for**: Most users, cost-effective, Vultr Track compliance
 
 ### A1: Vultr Account Setup
+1. Create account at [vultr.com](https://vultr.com)
+2. Get API key from [vultr.com/settings/api](https://my.vultr.com/settings/#settingsapi)
+3. Test API access:
 ```bash
-# 1. Create Vultr account at https://www.vultr.com/
-# 2. Get API key from https://my.vultr.com/settings/#settingsapi
 export VULTR_API_KEY=your_vultr_api_key_here
-
-# 3. Test API access
 curl -H "Authorization: Bearer $VULTR_API_KEY" https://api.vultr.com/v2/account
 ```
 
-### A2: Configure Vultr Environment
+### A2: Configure Vultr Settings
 ```bash
-# Add Vultr-specific variables to .env
+# Add to .env file
 cat >> .env << 'EOF'
-# Vultr Configuration
 DEPLOYMENT_TYPE=vultr
 VULTR_API_KEY=your_vultr_api_key_here
-VULTR_REGION=ewr  # New Jersey (or your preferred region)
-VULTR_PLAN=vc2-1c-2gb  # $6/month plan
+VULTR_REGION=ewr  # New Jersey
+VULTR_PLAN=vc2-1c-2gb  # $6/month
 SERVER_NAME=govwatcher-prod
 
 # Optional: Custom domain
@@ -175,127 +155,77 @@ EOF
 
 ### A3: Deploy to Vultr
 ```bash
-# Make deployment script executable
-chmod +x deploy.sh
-
-# Deploy complete stack (one command!)
+# Deploy complete stack
 ./deploy.sh vultr deploy
 
-# Expected output:
-# [INFO] Creating Vultr VPS...
-# [SUCCESS] VPS created: IP 192.168.1.100
-# [INFO] Installing Docker...
-# [SUCCESS] All services started!
-# 
-# 🌐 Access URLs:
-# - Dashboard: https://192.168.1.100/dashboard
-# - Health: https://192.168.1.100/status
-# - API Docs: https://192.168.1.100/docs
-```
-
-### A4: Verify Vultr Deployment
-```bash
-# Get VPS details
+# Monitor deployment
 ./deploy.sh vultr status
 
-# Test health endpoint
-VPS_IP=$(cat .vultr_instance | jq -r '.main_ip')
-curl https://$VPS_IP/status
-
-# Test dashboard
-curl -I https://$VPS_IP/dashboard
-
-# Should return 200 OK
+# Expected output:
+# ✅ VPS created: IP 192.168.1.100
+# ✅ Docker services started
+# ✅ Application healthy
 ```
 
-### A5: Configure Custom Domain (Optional)
+### A4: Access Your Deployment
 ```bash
-# Point your domain to VPS IP
-# Add DNS A record: govwatcher.yourdomain.com -> VPS_IP
+# Get VPS IP
+VPS_IP=$(./deploy.sh vultr get-ip)
 
-# Deploy with SSL
-DOMAIN_NAME=govwatcher.yourdomain.com ./deploy.sh vultr deploy_ssl
-
-# Verify SSL
-curl -I https://govwatcher.yourdomain.com/status
+# Access URLs
+echo "Dashboard: https://$VPS_IP/dashboard"
+echo "Health: https://$VPS_IP/status"
+echo "API Docs: https://$VPS_IP/docs"
 ```
 
-**✅ Vultr Deployment Complete!** 
-- Dashboard: `https://your_vps_ip/dashboard`
-- API: `https://your_vps_ip/docs`
-- Cost: ~$6-12/month
+**✅ Vultr deployment complete!** Cost: ~$6-12/month
 
 ---
 
-## 🟠 Option B: AWS Enterprise
+## 🟠 Option B: AWS CloudFormation
 
-**Perfect for**: Enterprise organizations, compliance requirements, scalability
+**Best for**: Enterprise organizations, scalability requirements
 
 ### B1: AWS Prerequisites
 ```bash
 # Install AWS CLI
 pip install awscli
 
-# Configure AWS credentials (need admin access)
+# Configure credentials
 aws configure
-# AWS Access Key ID: [Enter your access key]
-# AWS Secret Access Key: [Enter your secret key]
+# Enter your AWS Access Key ID
+# Enter your AWS Secret Access Key
 # Default region: us-east-1
 # Default output format: json
 
-# Verify AWS access
+# Verify access
 aws sts get-caller-identity
 ```
 
-### B2: Configure AWS Environment
+### B2: Configure AWS Settings
 ```bash
-# Add AWS-specific variables to .env
+# Add to .env file
 cat >> .env << 'EOF'
-# AWS Configuration
 DEPLOYMENT_TYPE=aws
 AWS_REGION=us-east-1
 STACK_NAME=govwatcher-enterprise
 STAGE=prod
-
-# Domain for professional deployment
-DOMAIN_NAME=yourdomain.com
-FROM_EMAIL=noreply@yourdomain.com
 EOF
 ```
 
-### B3: Set Up AWS SES (Email Service)
+### B3: Deploy to AWS
 ```bash
-# Verify domain for email sending
-aws ses verify-domain-identity --domain yourdomain.com --region us-east-1
-
-# Verify your email for testing
-aws ses verify-email-identity --email-address admin@yourdomain.com
-
-# Check verification status
-aws ses get-identity-verification-attributes --identities yourdomain.com
-# Note: You'll need to add DNS records for domain verification
-```
-
-### B4: Deploy to AWS
-```bash
-# Deploy complete CloudFormation stack
+# Deploy CloudFormation stack
 ./deploy.sh aws deploy
 
-# Monitor deployment progress
+# Monitor deployment
 ./deploy.sh aws status
 
-# Expected output:
-# [INFO] Building Docker images...
-# [SUCCESS] Images pushed to ECR
-# [INFO] Deploying CloudFormation...
-# [SUCCESS] Stack deployed!
-# 
-# 🌐 Access URLs:
-# - API Gateway: https://abc123.execute-api.us-east-1.amazonaws.com/prod
-# - Dashboard: https://abc123.execute-api.us-east-1.amazonaws.com/prod/dashboard
+# Get deployment info
+aws cloudformation describe-stacks --stack-name govwatcher-enterprise
 ```
 
-### B5: Verify AWS Deployment
+### B4: Access AWS Deployment
 ```bash
 # Get API Gateway URL
 API_URL=$(aws cloudformation describe-stacks \
@@ -304,39 +234,72 @@ API_URL=$(aws cloudformation describe-stacks \
   --output text)
 
 echo "API URL: $API_URL"
-
-# Test endpoints
-curl "$API_URL/status"
-curl "$API_URL/dashboard"
-
-# Test Lambda function
-aws lambda invoke --function-name govwatcher-enterprise-SubscriptionAgent \
-  --payload '{"command":"health"}' response.json && cat response.json
+echo "Dashboard: $API_URL/dashboard"
 ```
 
-**✅ AWS Deployment Complete!** 
-- Dashboard: `$API_URL/dashboard`
-- CloudWatch: AWS Console → CloudWatch
-- Cost: ~$25-100/month
+**✅ AWS deployment complete!** Cost: ~$25-100/month
 
 ---
 
-## 🔄 Option C: Hybrid Deployment
+## 🔄 Option C: Docker Compose (Local)
 
-**Perfect for**: Maximum flexibility, redundancy, best of all worlds
+**Best for**: Development, testing, local demos
 
-### C1: Deploy Vultr Frontend
+### C1: Start Local Services
 ```bash
-# First, complete Option A (Vultr deployment)
-# This gives you the web interface and dashboard
+# Start all services
+docker-compose -f infra/docker/docker-compose.yml up -d
 
-FRONTEND_URL=$(cat .vultr_instance | jq -r '.main_ip')
-echo "Frontend deployed at: https://$FRONTEND_URL"
+# Check status
+docker-compose -f infra/docker/docker-compose.yml ps
+
+# View logs
+docker-compose -f infra/docker/docker-compose.yml logs -f
 ```
 
-### C2: Deploy AWS Backend
+### C2: Access Local Deployment
 ```bash
-# Deploy serverless backend to AWS
+# Application URLs
+echo "Dashboard: http://localhost:8080/dashboard"
+echo "Health: http://localhost:8080/status"
+echo "API Docs: http://localhost:8080/docs"
+
+# Database access
+docker exec -it govwatcher-postgres psql -U govwatcher -d govwatcher
+```
+
+### C3: Development Commands
+```bash
+# Restart specific service
+docker-compose -f infra/docker/docker-compose.yml restart web
+
+# Stop all services
+docker-compose -f infra/docker/docker-compose.yml down
+
+# Clean up volumes
+docker-compose -f infra/docker/docker-compose.yml down -v
+```
+
+**✅ Local deployment complete!** Cost: Free
+
+---
+
+## 🔗 Option D: Hybrid Deployment
+
+**Best for**: Maximum flexibility and redundancy
+
+### D1: Deploy Frontend (Vultr)
+```bash
+# Deploy web interface to Vultr
+./deploy.sh vultr deploy
+
+# Get frontend URL
+FRONTEND_URL=$(./deploy.sh vultr get-ip)
+```
+
+### D2: Deploy Backend (AWS)
+```bash
+# Deploy serverless backend
 export DEPLOYMENT_TARGET=backend-only
 ./deploy.sh aws deploy
 
@@ -345,770 +308,246 @@ BACKEND_URL=$(aws cloudformation describe-stacks \
   --stack-name govwatcher-enterprise \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text)
-echo "Backend deployed at: $BACKEND_URL"
 ```
 
-### C3: Configure Integration
+### D3: Configure Integration
 ```bash
-# Connect Vultr frontend to AWS backend
-VPS_IP=$(cat .vultr_instance | jq -r '.main_ip')
-
-# SSH into Vultr VPS and update configuration
-ssh root@$VPS_IP << EOF
+# Update frontend to use AWS backend
+ssh root@$FRONTEND_URL << EOF
 echo "AWS_BACKEND_URL=$BACKEND_URL" >> /app/.env
 docker-compose restart web
 EOF
-
-# Update AWS backend to know about frontend
-aws lambda update-function-configuration \
-  --function-name govwatcher-enterprise-MailAgent \
-  --environment "Variables={FRONTEND_URL=https://$VPS_IP}"
 ```
 
-### C4: Verify Hybrid Integration
-```bash
-# Test frontend
-curl https://$VPS_IP/status
-
-# Test backend
-curl $BACKEND_URL/status
-
-# Test integration
-curl https://$VPS_IP/api/hybrid-status
-```
-
-**✅ Hybrid Deployment Complete!** 
-- Frontend: Vultr VPS (fast, cost-effective)
-- Backend: AWS Lambda (scalable, enterprise-grade)
-- Best of both worlds!
-
----
-
-## 🔗 Option D: On-Chain Integration
-
-**Perfect for**: Blockchain-native organizations, trustless payments, decentralized approach
-
-### D1: Set Up Fetch.ai Environment
-```bash
-# Install Fetch.ai tools
-pip install uagents cosmpy
-
-# Create Fetch.ai wallet
-python << 'EOF'
-from cosmpy.crypto.keypairs import PrivateKey
-from cosmpy.aerial.wallet import LocalWallet
-
-# Generate new wallet
-private_key = PrivateKey()
-wallet = LocalWallet(private_key)
-
-print(f"Wallet Address: {wallet.address()}")
-print(f"Private Key: {private_key}")
-
-# Save to environment
-with open('.env', 'a') as f:
-    f.write(f'\nFETCH_WALLET_ADDRESS={wallet.address()}\n')
-    f.write(f'FETCH_PRIVATE_KEY={private_key}\n')
-EOF
-
-# Fund wallet with FET tokens (minimum 500 FET recommended)
-echo "⚠️ Fund your wallet with FET tokens: $(grep FETCH_WALLET_ADDRESS .env | cut -d= -f2)"
-```
-
-### D2: Configure On-Chain Environment
-```bash
-# Add blockchain-specific variables
-cat >> .env << 'EOF'
-# Blockchain Configuration
-DEPLOYMENT_TYPE=onchain
-BLOCKCHAIN_ENABLED=true
-FETCH_NETWORK=fetchai-mainnet
-
-# Integration with existing deployment
-INTEGRATION_URL=https://your_existing_deployment_url
-EOF
-```
-
-### D3: Generate Agent Identities
-```bash
-# Generate unique addresses for each agent
-python << 'EOF'
-from uagents import Agent
-import json
-
-agents_config = {
-    "payment": Agent(name="payment-agent", seed="payment_seed_string"),
-    "subscription": Agent(name="subscription-agent", seed="subscription_seed_string"),
-    "integration": Agent(name="integration-agent", seed="integration_seed_string")
-}
-
-config = {
-    "agents": {
-        name: {
-            "address": agent.address,
-            "name": f"Cosmos GRC {name.title()} Agent",
-            "port": 8000 + i
-        }
-        for i, (name, agent) in enumerate(agents_config.items())
-    },
-    "pricing": {
-        "annual_subscription_fet": 25,
-        "enterprise_tier_fet": 100,
-        "additional_chain_fet": 5
-    }
-}
-
-with open('onchain-config.json', 'w') as f:
-    json.dump(config, f, indent=2)
-
-print("✅ On-chain configuration created!")
-EOF
-```
-
-### D4: Deploy On-Chain Agents
-```bash
-# Deploy payment processing agent
-python src/onchain/payment_agent.py &
-PAYMENT_PID=$!
-
-# Deploy integration agent  
-python src/onchain/integration_agent.py &
-INTEGRATION_PID=$!
-
-echo "✅ On-chain agents deployed!"
-echo "Payment Agent PID: $PAYMENT_PID"
-echo "Integration Agent PID: $INTEGRATION_PID"
-
-# Save PIDs for management
-echo "$PAYMENT_PID" > payment_agent.pid
-echo "$INTEGRATION_PID" > integration_agent.pid
-```
-
-### D5: Register on AgentVerse
-```bash
-# Install AgentVerse CLI
-pip install agentverse-cli
-
-# Login to AgentVerse
-agentverse login
-
-# Register agents
-PAYMENT_ADDRESS=$(jq -r '.agents.payment.address' onchain-config.json)
-agentverse register-agent \
-  --name "Cosmos GRC Payment Agent" \
-  --description "Enterprise governance payment processing with FET tokens" \
-  --address "$PAYMENT_ADDRESS" \
-  --category "finance" \
-  --tags "cosmos,governance,payment,enterprise"
-
-echo "✅ Agents registered on AgentVerse!"
-```
-
-### D6: Test On-Chain Integration
-```bash
-# Test payment agent
-PAYMENT_ADDRESS=$(jq -r '.agents.payment.address' onchain-config.json)
-
-python << EOF
-from uagents import Context
-import asyncio
-
-async def test_payment():
-    # Test payment request
-    payment_data = {
-        "organization_name": "Test Organization",
-        "contact_email": "test@example.com",
-        "subscription_tier": "basic",
-        "chains": ["cosmoshub-4"],
-        "payment_amount": 25,
-        "payment_tx_hash": "test_tx_hash"
-    }
-    
-    print("✅ Payment agent test completed!")
-
-asyncio.run(test_payment())
-EOF
-```
-
-**✅ On-Chain Integration Complete!** 
-- Agents deployed on Fetch.ai blockchain
-- Trustless FET token payments
-- AgentVerse marketplace listing
-
----
-
-## 🔧 Multi-Authentication Setup
-
-Enable multiple authentication methods for maximum user flexibility.
-
-### Auth Option 1: Keplr Wallet Integration
-```bash
-# Add Keplr configuration to .env
-cat >> .env << 'EOF'
-# Keplr Configuration
-KEPLR_ENABLED=true
-SUPPORTED_CHAINS=cosmoshub-4,osmosis-1,juno-1,fetchhub-4
-EOF
-
-# Update web templates (already configured in src/web/templates/)
-echo "✅ Keplr wallet authentication ready!"
-```
-
-### Auth Option 2: SSO Integration
-```bash
-# Set up OAuth providers
-cat >> .env << 'EOF'
-# SSO Configuration
-SSO_ENABLED=true
-
-# Google OAuth (get from: https://console.developers.google.com/)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Microsoft OAuth (get from: https://portal.azure.com/)
-MICROSOFT_CLIENT_ID=your_microsoft_client_id
-MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
-
-# GitHub OAuth (get from: https://github.com/settings/developers)
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-EOF
-
-echo "✅ SSO authentication configured!"
-```
-
-### Auth Option 3: Traditional Email/Password
-```bash
-# Already configured by default
-echo "✅ Traditional authentication ready!"
-```
-
-### Test All Authentication Methods
-```bash
-# Restart services to apply auth changes
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    ssh root@$(cat .vultr_instance | jq -r '.main_ip') 'cd /app && docker-compose restart'
-elif [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    ./deploy.sh aws deploy  # Redeploy with new config
-fi
-
-# Test authentication endpoints
-BASE_URL="https://$(cat .vultr_instance | jq -r '.main_ip' 2>/dev/null || echo 'your-deployment-url')"
-
-curl -X POST "$BASE_URL/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"demo@enterprise.com","password":"password123"}'
-
-echo "✅ All authentication methods configured!"
-```
-
----
-
-## 💳 Payment System Configuration
-
-Enable multiple payment methods for subscription flexibility.
-
-### Payment Option 1: Stripe Integration
-```bash
-# Get Stripe keys from: https://dashboard.stripe.com/apikeys
-cat >> .env << 'EOF'
-# Stripe Configuration
-STRIPE_ENABLED=true
-STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-EOF
-```
-
-### Payment Option 2: Cryptocurrency (FET Tokens)
-```bash
-# Enable blockchain payments (requires Option D completion)
-cat >> .env << 'EOF'
-# Cryptocurrency Payment Configuration
-CRYPTO_PAYMENTS_ENABLED=true
-FET_PAYMENT_ADDRESS=$(jq -r '.agents.payment.address' onchain-config.json)
-FET_NETWORK=fetchai-mainnet
-EOF
-```
-
-### Payment Option 3: Enterprise Invoicing
-```bash
-# Enable enterprise payment options
-cat >> .env << 'EOF'
-# Enterprise Payment Configuration
-ENTERPRISE_BILLING_ENABLED=true
-INVOICE_EMAIL=billing@yourdomain.com
-NET_TERMS=30  # Payment terms in days
-EOF
-```
-
-### Configure Payment Webhooks
-```bash
-# For Stripe webhooks (if using Stripe)
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    VPS_IP=$(cat .vultr_instance | jq -r '.main_ip')
-    echo "Configure Stripe webhook URL: https://$VPS_IP/api/payments/stripe-webhook"
-elif [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    API_URL=$(aws cloudformation describe-stacks \
-      --stack-name govwatcher-enterprise \
-      --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
-      --output text)
-    echo "Configure Stripe webhook URL: $API_URL/api/payments/stripe-webhook"
-fi
-```
+**✅ Hybrid deployment complete!** Cost: ~$30-120/month
 
 ---
 
 ## 📊 Monitoring & Validation
 
-Comprehensive monitoring setup and system validation.
-
-### Health Monitoring Setup
+### Health Monitoring
 ```bash
 # Create monitoring script
-cat > monitor_system.py << 'EOF'
+cat > monitor_health.py << 'EOF'
 #!/usr/bin/env python3
 import requests
 import json
+import sys
 from datetime import datetime
 
-def check_system_health():
-    """Comprehensive system health check"""
-    
-    # Determine base URL based on deployment
+def check_health(base_url):
+    """Check system health"""
     try:
-        with open('.vultr_instance', 'r') as f:
-            vultr_data = json.load(f)
-            base_url = f"https://{vultr_data['main_ip']}"
-    except:
-        base_url = "http://localhost:8080"  # Local development
-    
-    checks = {
-        "web_dashboard": f"{base_url}/dashboard",
-        "health_endpoint": f"{base_url}/status",
-        "api_docs": f"{base_url}/docs",
-        "auth_endpoint": f"{base_url}/api/auth/login"
-    }
-    
-    results = {}
-    for name, url in checks.items():
-        try:
-            response = requests.get(url, timeout=10)
-            results[name] = {
-                "status": "✅ OK" if response.status_code == 200 else f"❌ {response.status_code}",
-                "response_time": f"{response.elapsed.total_seconds():.2f}s"
-            }
-        except Exception as e:
-            results[name] = {"status": "❌ ERROR", "error": str(e)}
-    
-    print(f"🌌 System Health Check - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
-    for name, result in results.items():
-        print(f"{name:20}: {result['status']}")
-        if 'response_time' in result:
-            print(f"{'':20}  Response time: {result['response_time']}")
-    print("=" * 60)
-    
-    return all('✅' in result['status'] for result in results.values())
+        response = requests.get(f"{base_url}/status", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✅ {base_url} - {data.get('status', 'unknown')}")
+            return True
+        else:
+            print(f"❌ {base_url} - HTTP {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"❌ {base_url} - Error: {e}")
+        return False
 
 if __name__ == "__main__":
-    healthy = check_system_health()
-    exit(0 if healthy else 1)
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
+    success = check_health(base_url)
+    sys.exit(0 if success else 1)
 EOF
 
-chmod +x monitor_system.py
-python monitor_system.py
+chmod +x monitor_health.py
+
+# Test monitoring
+python monitor_health.py http://localhost:8080
 ```
 
-### Set Up Automated Monitoring
+### Compliance Validation
 ```bash
-# Create comprehensive monitoring script
-cat > comprehensive_monitor.sh << 'EOF'
-#!/bin/bash
-set -e
-
-echo "🔍 Running comprehensive system validation..."
-
-# 1. Health check
-echo "1️⃣ System health check..."
-python monitor_system.py
-
-# 2. Compliance check  
-echo "2️⃣ Vultr Track compliance check..."
+# Run all validation checks
 python scripts/hackathon_check.py
 
-# 3. Basic setup validation
-echo "3️⃣ Basic setup validation..."
-python scripts/test_basic_setup.py
+# Validate data models
+python scripts/validate_data_models.py
 
-# 4. AI integration test
-echo "4️⃣ AI integration test..."
-python << 'PYTHON_EOF'
-from src.ai_adapters import GroqAdapter, HybridAIAnalyzer
+# Test AI integration
+python -c "
 import asyncio
+from src.ai_adapters import GroqAdapter
 
 async def test_ai():
-    try:
-        analyzer = HybridAIAnalyzer()
-        result = await analyzer.analyze_proposal(
-            {"title": "Test proposal", "description": "Test description"},
-            {"risk_tolerance": "medium"}
-        )
-        print("✅ AI integration working")
-    except Exception as e:
-        print(f"❌ AI integration error: {e}")
+    adapter = GroqAdapter()
+    print('AI adapter initialized successfully')
 
 asyncio.run(test_ai())
-PYTHON_EOF
-
-echo "✅ Comprehensive monitoring complete!"
-EOF
-
-chmod +x comprehensive_monitor.sh
+"
 ```
 
-### Set Up Continuous Monitoring (Optional)
+### Performance Testing
 ```bash
-# Set up cron job for regular health checks
-(crontab -l 2>/dev/null; echo "*/15 * * * * cd $(pwd) && ./comprehensive_monitor.sh >> monitor.log 2>&1") | crontab -
-
-echo "✅ Continuous monitoring configured (every 15 minutes)"
-```
-
-### Validate All Features
-```bash
-# Run complete feature validation
-cat > validate_all_features.py << 'EOF'
+# Basic performance test
+cat > performance_test.py << 'EOF'
 #!/usr/bin/env python3
 import requests
-import json
+import time
+import statistics
 
-def validate_features():
-    """Validate all major features are working"""
+def test_performance(base_url, num_requests=10):
+    """Test API performance"""
+    response_times = []
     
-    # Get base URL
-    try:
-        with open('.vultr_instance', 'r') as f:
-            vultr_data = json.load(f)
-            base_url = f"https://{vultr_data['main_ip']}"
-    except:
-        base_url = "http://localhost:8080"
-    
-    features = {
-        "Dashboard Access": f"{base_url}/dashboard",
-        "API Documentation": f"{base_url}/docs", 
-        "Health Check": f"{base_url}/status",
-        "Organization API": f"{base_url}/api/organizations",
-        "Proposal API": f"{base_url}/api/proposals",
-        "AI Analysis API": f"{base_url}/api/ai/analyze"
-    }
-    
-    print("🧪 Feature Validation Report")
-    print("=" * 50)
-    
-    all_working = True
-    for feature, url in features.items():
+    for i in range(num_requests):
+        start = time.time()
         try:
-            response = requests.get(url, timeout=10)
-            if response.status_code in [200, 401, 405]:  # 401/405 are OK for protected endpoints
-                status = "✅ WORKING"
-            else:
-                status = f"❌ HTTP {response.status_code}"
-                all_working = False
+            response = requests.get(f"{base_url}/status", timeout=10)
+            end = time.time()
+            if response.status_code == 200:
+                response_times.append(end - start)
         except Exception as e:
-            status = f"❌ ERROR: {str(e)[:30]}..."
-            all_working = False
-        
-        print(f"{feature:20}: {status}")
+            print(f"Request {i+1} failed: {e}")
     
-    print("=" * 50)
-    if all_working:
-        print("🎉 ALL FEATURES WORKING!")
+    if response_times:
+        avg_time = statistics.mean(response_times)
+        print(f"Average response time: {avg_time:.3f}s")
+        print(f"Min: {min(response_times):.3f}s, Max: {max(response_times):.3f}s")
     else:
-        print("⚠️ Some features need attention")
-    
-    return all_working
+        print("All requests failed")
 
 if __name__ == "__main__":
-    validate_features()
+    import sys
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
+    test_performance(base_url)
 EOF
 
-python validate_all_features.py
+chmod +x performance_test.py
+python performance_test.py http://localhost:8080
 ```
 
 ---
 
 ## 🚨 Troubleshooting
 
-Common issues and their solutions.
+### Common Issues
 
-### Issue 1: Health Check Fails
+#### Issue 1: Health Check Fails
 ```bash
-# Diagnosis
-curl -v https://your_deployment_url/status
+# Check service status
+docker ps
+docker logs govwatcher-web
 
 # For Vultr deployment
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    VPS_IP=$(cat .vultr_instance | jq -r '.main_ip')
-    ssh root@$VPS_IP 'docker ps'
-    ssh root@$VPS_IP 'docker logs govwatcher-web-1'
-fi
-
-# For AWS deployment  
-if [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    aws lambda invoke --function-name govwatcher-enterprise-SubscriptionAgent \
-      --payload '{"command":"health"}' response.json
-    cat response.json
-fi
+ssh root@$VPS_IP 'docker ps'
+ssh root@$VPS_IP 'docker logs govwatcher-web'
 ```
 
-### Issue 2: AI Analysis Not Working
+#### Issue 2: AI Analysis Not Working
 ```bash
-# Check API keys
+# Verify API keys
 echo "Groq API Key: ${GROQ_API_KEY:0:10}..."
 
-# Test Groq API directly
+# Test API directly
 curl -H "Authorization: Bearer $GROQ_API_KEY" \
   https://api.groq.com/openai/v1/models
 
-# Check logs for AI errors
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    ssh root@$(cat .vultr_instance | jq -r '.main_ip') \
-      'docker logs govwatcher-web-1 | grep -i groq'
-fi
+# Check application logs
+docker logs govwatcher-web | grep -i groq
 ```
 
-### Issue 3: Database Connection Issues
+#### Issue 3: Database Connection Issues
 ```bash
-# For Vultr PostgreSQL
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    VPS_IP=$(cat .vultr_instance | jq -r '.main_ip')
-    ssh root@$VPS_IP 'docker exec -it govwatcher-db-1 psql -U govwatcher -d govwatcher -c "SELECT 1;"'
-fi
+# For PostgreSQL
+docker exec -it govwatcher-postgres psql -U govwatcher -d govwatcher -c "SELECT 1;"
 
-# For AWS RDS
-if [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    aws rds describe-db-instances --db-instance-identifier govwatcher-enterprise
-fi
+# For SQLite
+ls -la data/govwatcher.db
+sqlite3 data/govwatcher.db ".tables"
 ```
 
-### Issue 4: Authentication Problems
+#### Issue 4: Deployment Failures
 ```bash
-# Test JWT secret
-echo "JWT Secret length: ${#JWT_SECRET}"
-if [ ${#JWT_SECRET} -lt 32 ]; then
-    echo "❌ JWT secret too short! Generating new one..."
-    JWT_SECRET=$(openssl rand -hex 32)
-    echo "JWT_SECRET=$JWT_SECRET" >> .env
-fi
+# Check deployment logs
+./deploy.sh vultr logs
 
-# Test authentication endpoint
-BASE_URL="https://$(cat .vultr_instance | jq -r '.main_ip' 2>/dev/null || echo 'localhost:8080')"
-curl -X POST "$BASE_URL/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"demo@enterprise.com","password":"password123"}'
+# Verify prerequisites
+python scripts/test_basic_setup.py
+
+# Clean and retry
+./deploy.sh vultr cleanup
+./deploy.sh vultr deploy
 ```
 
-### Issue 5: Compliance Check Failing
-```bash
-# Run detailed compliance check
-python scripts/hackathon_check.py --verbose
+### Recovery Procedures
 
-# Check specific imports
-python -c "
-try:
-    from src.web.main import app
-    from src.ai_adapters import GroqAdapter
-    print('✅ All imports successful')
-except Exception as e:
-    print(f'❌ Import error: {e}')
-"
+#### Emergency Restart
+```bash
+# Docker Compose
+docker-compose -f infra/docker/docker-compose.yml restart
+
+# Vultr VPS
+ssh root@$VPS_IP 'cd /app && docker-compose restart'
+
+# AWS Lambda
+aws lambda update-function-code --function-name govwatcher-web
 ```
 
-### Emergency Recovery
+#### Data Recovery
 ```bash
-# Stop all services
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    ssh root@$(cat .vultr_instance | jq -r '.main_ip') 'docker-compose down'
-fi
+# Backup database
+docker exec govwatcher-postgres pg_dump -U govwatcher govwatcher > backup.sql
 
-if [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    aws lambda put-function-concurrency \
-      --function-name govwatcher-enterprise-SubscriptionAgent \
-      --reserved-concurrent-executions 0
-fi
-
-# Restart services
-if [ "$DEPLOYMENT_TYPE" = "vultr" ]; then
-    ./deploy.sh vultr deploy
-elif [ "$DEPLOYMENT_TYPE" = "aws" ]; then
-    ./deploy.sh aws deploy
-fi
+# Restore from backup
+docker exec -i govwatcher-postgres psql -U govwatcher govwatcher < backup.sql
 ```
 
 ---
 
-## 🎉 Final Validation & Go-Live Checklist
+## 📋 Post-Deployment Checklist
 
-### Complete System Validation
-```bash
-# Run the ultimate validation script
-cat > final_validation.sh << 'EOF'
-#!/bin/bash
-set -e
+### Immediate Validation
+- [ ] Health endpoint returns 200 OK
+- [ ] Dashboard loads without errors
+- [ ] AI analysis is functional
+- [ ] Database connections work
+- [ ] All Docker containers are healthy
 
-echo "🚀 FINAL SYSTEM VALIDATION"
-echo "=========================="
+### Security Checklist
+- [ ] JWT secrets are properly configured
+- [ ] Database passwords are secure
+- [ ] API keys are not exposed in logs
+- [ ] HTTPS is enabled (production)
+- [ ] Firewall rules are configured
 
-# 1. Compliance Check
-echo "1️⃣ Vultr Track Compliance..."
-python scripts/hackathon_check.py | grep "ALL CHECKS PASSED" && echo "✅ PASSED" || echo "❌ FAILED"
+### Performance Checklist
+- [ ] Response times are acceptable (<2s)
+- [ ] Database queries are optimized
+- [ ] Caching is working
+- [ ] Resource usage is reasonable
+- [ ] Error rates are low
 
-# 2. System Health
-echo "2️⃣ System Health..."
-python monitor_system.py > /dev/null && echo "✅ PASSED" || echo "❌ FAILED"
-
-# 3. Feature Validation
-echo "3️⃣ Feature Validation..."
-python validate_all_features.py > /dev/null && echo "✅ PASSED" || echo "❌ FAILED"
-
-# 4. AI Integration
-echo "4️⃣ AI Integration..."
-python -c "
-import asyncio
-from src.ai_adapters import GroqAdapter
-
-async def test():
-    adapter = GroqAdapter()
-    result = await adapter.analyze_governance_proposal('cosmoshub-4', 1, 'Test', 'Test desc', {})
-    return 'recommendation' in result
-
-try:
-    result = asyncio.run(test())
-    print('✅ PASSED' if result else '❌ FAILED')
-except:
-    print('❌ FAILED')
-"
-
-# 5. Performance Test
-echo "5️⃣ Performance Test..."
-BASE_URL="https://$(cat .vultr_instance | jq -r '.main_ip' 2>/dev/null || echo 'localhost:8080')"
-RESPONSE_TIME=$(curl -w "%{time_total}" -s -o /dev/null "$BASE_URL/status")
-if (( $(echo "$RESPONSE_TIME < 5.0" | bc -l) )); then
-    echo "✅ PASSED (${RESPONSE_TIME}s)"
-else
-    echo "❌ FAILED (${RESPONSE_TIME}s - too slow)"
-fi
-
-echo "=========================="
-echo "🎉 SYSTEM READY FOR PRODUCTION!"
-echo ""
-echo "🌐 Access URLs:"
-echo "   Dashboard: $BASE_URL/dashboard"
-echo "   API Docs:  $BASE_URL/docs"
-echo "   Health:    $BASE_URL/status"
-echo ""
-echo "📊 Demo Credentials:"
-echo "   Email: demo@enterprise.com"
-echo "   Password: password123"
-echo ""
-echo "🎯 Next Steps:"
-echo "   1. Configure your organization policies"
-echo "   2. Set up governance monitoring preferences"
-echo "   3. Test AI recommendations"
-echo "   4. Configure payment methods"
-echo "   5. Invite team members"
-EOF
-
-chmod +x final_validation.sh
-./final_validation.sh
-```
-
-### Production Readiness Checklist
-
-- [ ] **System Health**: All health checks passing
-- [ ] **Compliance**: 9/9 Vultr Track requirements met
-- [ ] **Authentication**: All auth methods working
-- [ ] **Payment Systems**: Payment processing configured
-- [ ] **AI Integration**: Groq/Llama analysis working
-- [ ] **Monitoring**: Health monitoring active
-- [ ] **Documentation**: Team trained on dashboard
-- [ ] **Backup Plan**: Recovery procedures tested
-- [ ] **Domain Setup**: Custom domain configured (optional)
-- [ ] **SSL Certificate**: HTTPS working properly
-
-### Success Metrics to Track
-
-```bash
-# Create metrics tracking script
-cat > track_metrics.py << 'EOF'
-import requests
-import json
-from datetime import datetime
-
-def track_metrics():
-    """Track key success metrics"""
-    
-    metrics = {
-        "timestamp": datetime.now().isoformat(),
-        "system_uptime": "monitor_system.py passes",
-        "compliance_status": "9/9 Vultr Track requirements",
-        "features_working": "All major features operational",
-        "ai_integration": "Groq + Llama hybrid system active",
-        "authentication": "Multi-auth system ready",
-        "payment_processing": "Multiple payment methods",
-        "deployment_type": "Production-ready"
-    }
-    
-    print("📊 DEPLOYMENT SUCCESS METRICS")
-    print("=" * 40)
-    for key, value in metrics.items():
-        print(f"{key:20}: {value}")
-    print("=" * 40)
-    print("🎉 READY FOR PRODUCTION USE!")
-
-if __name__ == "__main__":
-    track_metrics()
-EOF
-
-python track_metrics.py
-```
+### Monitoring Setup
+- [ ] Health monitoring is active
+- [ ] Log aggregation is configured
+- [ ] Alerts are set up
+- [ ] Backup procedures are tested
+- [ ] Documentation is updated
 
 ---
 
-## 🎊 Congratulations!
+## 🎉 Success!
 
-**You have successfully deployed the Cosmos Governance Risk & Compliance Co-Pilot!**
+Your Cosmos Governance Risk & Compliance Co-Pilot is now deployed and operational. 
 
-### What You've Accomplished
+### What's Next?
+1. **Configure organization policies** in the dashboard
+2. **Set up governance monitoring** for your chains
+3. **Test AI recommendations** with real proposals
+4. **Invite team members** to use the platform
+5. **Monitor system health** and performance
 
-🏢 **Enterprise-Ready Platform**: Professional governance management system
-🤖 **AI-Powered Analysis**: Groq + Llama hybrid recommendation engine
-🌐 **Modern Web Interface**: Responsive dashboard with real-time features
-🔗 **Blockchain Integration**: Optional trustless payment processing
-📊 **Compliance Features**: Audit trails and reporting capabilities
-🚀 **Scalable Architecture**: Flexible deployment across multiple platforms
-🔐 **Multi-Authentication**: Keplr, SSO, and traditional login support
-💳 **Flexible Payments**: Stripe, cryptocurrency, and enterprise billing
+### Support Resources
+- **Documentation**: See `docs/` folder for detailed guides
+- **Validation**: Run `python scripts/hackathon_check.py` anytime
+- **Troubleshooting**: Check logs and use monitoring scripts
+- **Updates**: Follow deployment procedures for updates
 
-### Your Live System
-
-- **Dashboard**: Access your enterprise governance interface
-- **API**: RESTful API for custom integrations
-- **Health Monitoring**: Real-time system status and alerts
-- **AI Analysis**: Intelligent governance recommendations
-- **Compliance**: Audit-ready reports and data export
-
-### Support & Next Steps
-
-1. **📖 Documentation**: This guide and README.md for reference
-2. **🔍 Monitoring**: Use the monitoring scripts for system health
-3. **🎯 Configuration**: Set up organization policies and preferences
-4. **👥 Team Training**: Familiarize stakeholders with the dashboard
-5. **📈 Growth**: Add more chains and advanced features as needed
-
----
-
-**🌌 Welcome to the future of autonomous, AI-powered Cosmos governance!**
-
-*Your organization is now equipped to participate effectively and efficiently in the Cosmos ecosystem's governance processes.* 
+**🌌 Your governance platform is ready to transform how you participate in the Cosmos ecosystem!** 

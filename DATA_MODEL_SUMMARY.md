@@ -1,154 +1,330 @@
-# 🗄️ Data Model Documentation Summary
+# Data Model Summary
 
-## What Was Created
+## Overview
 
-I've created comprehensive data model documentation for the Cosmos GRC Co-Pilot system. Here's what was accomplished:
+This document provides a quick reference for the data models used in the Cosmos Governance Risk & Compliance Co-Pilot. The system uses SQLAlchemy ORM with support for both PostgreSQL (production) and SQLite (development).
 
-## 📋 Documentation Created
+## Core Database Models
 
-### 1. **DATA_MODEL_DOCUMENTATION.md** (Complete Reference)
-- **Complete database schema** with all tables, fields, and relationships
-- **All Pydantic models** with field validation and business rules
-- **SQLAlchemy models** with proper constraints and indexes
-- **Function signatures** for all main treatment functions
-- **Visual diagrams** showing data relationships and system architecture
-- **Payment models** for both traditional (Stripe) and blockchain (FET) payments
-- **Agent models** for on-chain communication
-- **API endpoints** with request/response schemas
-- **Deployment considerations** and validation rules
+### Organization (`organizations` table)
+```python
+class Organization(Base):
+    id: str                    # Primary key (UUID)
+    name: str                  # Organization name
+    domain: str               # Email domain (e.g., "company.com")
+    policy_template: JSON     # Governance policy configuration
+    subscription_tier: str    # "basic" or "enterprise"
+    created_at: datetime      # Creation timestamp
+    updated_at: datetime      # Last update timestamp
+```
 
-### 2. **scripts/validate_data_models.py** (Validation Tool)
-- **Automated validation** of all documented models against actual implementation
-- **Consistency checking** between documentation and codebase
-- **Comprehensive testing** of Pydantic models, SQLAlchemy models, AI adapters
-- **JSON export** of validation results for CI/CD integration
+**Purpose**: Multi-tenant organization management with governance policies.
 
-### 3. **Integration with Existing Guides**
-- **References added** to MASTER_DEPLOYMENT_GUIDE.md
-- **Links added** to README.md and MASTER_DEPLOYMENT_GUIDE_HACKATHON.md
-- **Enhanced hackathon_check.py** to reference data model documentation
+### User (`users` table)
+```python
+class User(Base):
+    id: str                    # Primary key (UUID)
+    email: str                 # User email (unique)
+    password_hash: str         # Hashed password
+    organization_id: str       # Foreign key to Organization
+    role: str                  # "admin", "user", "super_admin"
+    created_at: datetime       # Creation timestamp
+    last_login: datetime       # Last login timestamp
+    is_active: bool           # Account status
+```
 
-## 🏗️ System Architecture Documented
+**Purpose**: User authentication and role-based access control.
 
-### Database Models (PostgreSQL/SQLite)
-- **organizations** - Multi-tenant organization management
-- **users** - User accounts with role-based access
-- **subscriptions** - Payment and service tracking
-- **proposal_history** - Governance proposals with AI analysis
-- **user_preferences** - Machine learning preference data
-- **payment_methods** - Multi-payment support (Stripe, FET, SSO)
-- **wallet_connections** - Blockchain wallet integrations
-- **audit_logs** - Complete compliance audit trail
+### Subscription (`subscriptions` table)
+```python
+class Subscription(Base):
+    id: str                    # Primary key (UUID)
+    organization_id: str       # Foreign key to Organization
+    tier: str                  # "basic", "enterprise"
+    status: str                # "active", "cancelled", "expired"
+    start_date: datetime       # Subscription start
+    end_date: datetime         # Subscription end
+    created_at: datetime       # Creation timestamp
+```
 
-### Pydantic Models (Business Logic)
-- **SubConfig** - Subscription configuration
-- **NewProposal** - Governance proposal detection
-- **VoteAdvice** - AI-generated voting recommendations
-- **PaymentRequest/Response** - Multi-payment processing
-- **PolicyTemplate** - Governance policy configuration
+**Purpose**: Subscription management and billing tracking.
 
-### Function Signatures Documented
-- **Authentication functions** (JWT, Keplr, SSO)
-- **Organization management** (CRUD, policy templates)
-- **Subscription management** (payment processing, tier validation)
-- **Agent functions** (message handlers, AI analysis)
-- **AI integration** (Groq, Llama, hybrid analysis)
+### Payment (`payments` table)
+```python
+class Payment(Base):
+    id: str                    # Primary key (UUID)
+    subscription_id: str       # Foreign key to Subscription
+    amount: float              # Payment amount
+    currency: str              # "USD", "FET"
+    payment_method: str        # "stripe", "crypto"
+    payment_provider: str      # "stripe", "fetch_blockchain"
+    transaction_id: str        # External transaction ID
+    status: str                # "pending", "completed", "failed"
+    created_at: datetime       # Payment timestamp
+```
 
-## 🔧 Implementation Features
+**Purpose**: Payment tracking for both traditional and cryptocurrency payments.
 
-### Data Validation & Consistency
-- **Cross-model validation** ensuring business rule compliance
-- **Database constraints** with triggers and check constraints
-- **Payment amount validation** across different currencies
-- **Subscription tier limitations** and capability matching
+### WalletConnection (`wallet_connections` table)
+```python
+class WalletConnection(Base):
+    id: str                    # Primary key (UUID)
+    user_id: str               # Foreign key to User
+    wallet_address: str        # Cosmos wallet address
+    chain_id: str              # Chain identifier (e.g., "cosmoshub-4")
+    wallet_type: str           # "keplr", "cosmostation"
+    created_at: datetime       # Connection timestamp
+    last_used: datetime        # Last usage timestamp
+```
 
-### Security & Compliance
-- **Field-level encryption** for sensitive data
-- **Role-based access control** with hierarchical permissions
-- **Complete audit trails** for compliance requirements
-- **Data retention policies** and GDPR compliance
+**Purpose**: Cosmos wallet integration for authentication and governance participation.
 
-### Multi-Payment Architecture
-- **Stripe integration** for traditional payments
-- **FET token payments** via Fetch.ai blockchain
-- **Invoice billing** for enterprise customers
-- **Payment verification** and webhook handling
+## AI Analysis Data Structures
 
-## 🚀 Deployment Ready Features
+### Governance Proposal (JSON format)
+```json
+{
+  "id": "string",
+  "chain_id": "string",
+  "proposal_id": "integer",
+  "title": "string",
+  "description": "string",
+  "status": "string",
+  "voting_start_time": "datetime",
+  "voting_end_time": "datetime",
+  "deposit_end_time": "datetime",
+  "total_deposit": "array",
+  "submit_time": "datetime",
+  "proposer": "string",
+  "type": "string",
+  "final_tally_result": {
+    "yes": "string",
+    "no": "string",
+    "abstain": "string",
+    "no_with_veto": "string"
+  }
+}
+```
 
-### Database Initialization
-- **Proper table creation order** with dependency management
-- **Demo data insertion** for testing and validation
-- **Index creation** for production performance
-- **Environment-specific configurations**
+### AI Analysis Result (JSON format)
+```json
+{
+  "proposal_id": "string",
+  "chain_id": "string",
+  "analysis_timestamp": "datetime",
+  "analysis_provider": "string",
+  "recommendation": "string",
+  "confidence": "float",
+  "reasoning": "string",
+  "risk_assessment": "string",
+  "policy_alignment": "string",
+  "swot_analysis": {
+    "strengths": ["string"],
+    "weaknesses": ["string"],
+    "opportunities": ["string"],
+    "threats": ["string"]
+  },
+  "pestel_analysis": {
+    "political": "string",
+    "economic": "string",
+    "social": "string",
+    "technological": "string",
+    "environmental": "string",
+    "legal": "string"
+  },
+  "stakeholder_impact": {
+    "validators": "string",
+    "delegators": "string",
+    "developers": "string",
+    "users": "string",
+    "institutions": "string"
+  },
+  "implementation_assessment": {
+    "technical_complexity": "string",
+    "timeline": "string",
+    "resource_requirements": "string",
+    "success_probability": "string"
+  }
+}
+```
 
-### Validation Tools
-- **Automated model checking** against implementation
-- **Consistency validation** between docs and code
-- **CI/CD integration** with exit codes for automation
-- **JSON export** of validation results
+## Configuration Data Structures
 
-## 📊 Business Value
+### Organization Policy Template (JSON format)
+```json
+{
+  "name": "string",
+  "description": "string",
+  "risk_tolerance": "string",
+  "voting_criteria": {
+    "security_weight": "float",
+    "economic_impact_weight": "float",
+    "community_support_weight": "float",
+    "decentralization_weight": "float"
+  },
+  "auto_vote_threshold": "float",
+  "notification_preferences": {
+    "email": "boolean",
+    "dashboard": "boolean"
+  },
+  "compliance_requirements": {
+    "audit_required": "boolean",
+    "approval_threshold": "float",
+    "documentation_required": "boolean"
+  }
+}
+```
 
-### For Developers
-- **Complete API reference** for integration
-- **Clear data relationships** for feature development
-- **Validation tools** for quality assurance
-- **Migration scripts** for database updates
+### Chain Configuration (JSON format)
+```json
+{
+  "chain_id": "string",
+  "name": "string",
+  "rpc_endpoint": "string",
+  "rest_endpoint": "string",
+  "enabled": "boolean",
+  "polling_interval": "integer",
+  "governance_module": "string",
+  "native_token": {
+    "symbol": "string",
+    "decimals": "integer"
+  }
+}
+```
 
-### For DevOps
-- **Deployment checklists** with validation steps
-- **Environment configurations** for all deployment types
-- **Monitoring guidelines** for production operations
-- **Troubleshooting guides** for common issues
+## API Response Formats
 
-### For Business Stakeholders
-- **Data model clarity** for compliance audits
-- **Security documentation** for risk assessment
-- **Scalability planning** with performance considerations
-- **Multi-tenant architecture** for enterprise sales
+### Health Check Response
+```json
+{
+  "status": "string",
+  "timestamp": "datetime",
+  "version": "string",
+  "services": {
+    "database": "string",
+    "ai_adapters": {
+      "groq": "boolean",
+      "llama": "boolean",
+      "openai": "boolean"
+    }
+  }
+}
+```
 
-## 🎯 Usage Instructions
+### Proposals API Response
+```json
+{
+  "count": "integer",
+  "proposals": [
+    {
+      "id": "string",
+      "chain_id": "string",
+      "title": "string",
+      "status": "string",
+      "ai_recommendation": "string",
+      "confidence": "float",
+      "analysis_timestamp": "datetime"
+    }
+  ]
+}
+```
 
-### For Implementation
-1. **Review DATA_MODEL_DOCUMENTATION.md** for complete system understanding
-2. **Run validation script**: `python scripts/validate_data_models.py`
-3. **Check compliance**: `python scripts/hackathon_check.py`
-4. **Deploy with confidence** using provided deployment guides
+### Authentication Response
+```json
+{
+  "access_token": "string",
+  "token_type": "string",
+  "expires_in": "integer",
+  "user": {
+    "id": "string",
+    "email": "string",
+    "role": "string",
+    "organization_id": "string"
+  }
+}
+```
 
-### For Development
-1. **Use documented models** as authoritative reference
-2. **Follow validation patterns** for new feature development
-3. **Maintain consistency** between documentation and implementation
-4. **Update documentation** when making model changes
+## Database Schema Relationships
 
-### For Deployment
-1. **Validate all models** before deployment
-2. **Run database initialization** scripts in proper order
-3. **Apply security constraints** and performance indexes
-4. **Monitor validation results** in production
+```
+Organization (1) ←→ (N) User
+Organization (1) ←→ (N) Subscription
+Subscription (1) ←→ (N) Payment
+User (1) ←→ (N) WalletConnection
+```
 
-## ✅ Quality Assurance
+## File Storage Locations
 
-### Documentation Standards
-- **Complete field descriptions** with business context
-- **Visual diagrams** for complex relationships
-- **Code examples** for all major functions
-- **Deployment checklists** for production readiness
+### Cache Files
+- **Governance Data**: `/tmp/governance_updates.json`
+- **AI Analysis Cache**: `/tmp/proposal_analysis_cache.json`
+- **Organization Policies**: `/tmp/organization_policy.json`
 
-### Validation Coverage
-- **100% model coverage** with automated testing
-- **Cross-reference validation** between docs and code
-- **Business rule verification** with constraint checking
-- **Performance consideration** documentation
+### Database Files
+- **SQLite (Development)**: `data/govwatcher.db`
+- **PostgreSQL (Production)**: Configured via `DATABASE_URL`
 
-## 🌟 Next Steps
+## Environment Configuration
 
-1. **Run the validation script** to ensure everything is working
-2. **Review the complete documentation** for system understanding
-3. **Test deployment** using the provided guides
-4. **Maintain documentation** as the system evolves
+### Required Variables
+```bash
+# Database
+DATABASE_URL=sqlite:///./data/govwatcher.db
 
----
+# AI Services
+GROQ_API_KEY=gsk_your_key_here
+OPENAI_API_KEY=sk_your_key_here  # Optional
 
-**🌌 The Cosmos GRC Co-Pilot now has enterprise-grade data model documentation that ensures reliable, scalable, and compliant governance management for organizations.** 
+# Security
+JWT_SECRET=your_secret_key_here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# Email (Optional)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+```
+
+### Optional Variables
+```bash
+# Demo Mode
+DEMO_MODE=true
+
+# Deployment
+DEPLOYMENT_TYPE=local
+VULTR_API_KEY=your_vultr_key
+AWS_ACCESS_KEY_ID=your_aws_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret
+
+# Blockchain Integration
+UAGENTS_PRIVATE_KEY=your_private_key
+FETCH_WALLET_ADDRESS=your_wallet_address
+```
+
+## Data Validation
+
+The system includes validation scripts:
+
+- **`scripts/validate_data_models.py`**: Validates database schema consistency
+- **`scripts/hackathon_check.py`**: Validates compliance requirements
+- **`scripts/test_basic_setup.py`**: Tests basic functionality
+
+## Cache Management
+
+The system uses three types of caching:
+
+1. **File-based caching**: JSON files in `/tmp/` for governance data
+2. **Database caching**: Stored analysis results in database
+3. **Memory caching**: Runtime caching for frequently accessed data
+
+## Security Considerations
+
+- **Password hashing**: Uses bcrypt for secure password storage
+- **JWT tokens**: Secure token-based authentication
+- **Input validation**: All user inputs are validated and sanitized
+- **SQL injection prevention**: SQLAlchemy ORM prevents SQL injection
+- **API key protection**: Environment variables for sensitive data
+
+This summary provides the essential data structures needed to understand and work with the Cosmos Governance Risk & Compliance Co-Pilot system. 
