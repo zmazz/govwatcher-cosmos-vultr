@@ -385,7 +385,43 @@ async def process_governance_proposals() -> List[Dict[str, Any]]:
                 "analysis_provider": analysis.get("provider", "unknown"),
                 "analysis_method": analysis.get("analysis_method", "unknown"),
                 "last_analyzed": analysis.get("timestamp", datetime.utcnow().isoformat()),
-                "analysis_hash": proposal_hash
+                "analysis_hash": proposal_hash,
+                
+                # Enhanced analysis fields
+                "swot_analysis": analysis.get("swot_analysis", {
+                    "strengths": [],
+                    "weaknesses": [],
+                    "opportunities": [],
+                    "threats": []
+                }),
+                "pestel_analysis": analysis.get("pestel_analysis", {
+                    "political": "Not analyzed",
+                    "economic": "Not analyzed",
+                    "social": "Not analyzed",
+                    "technological": "Not analyzed",
+                    "environmental": "Not analyzed",
+                    "legal": "Not analyzed"
+                }),
+                "stakeholder_impact": analysis.get("stakeholder_impact", {
+                    "validators": "Not analyzed",
+                    "delegators": "Not analyzed",
+                    "developers": "Not analyzed",
+                    "users": "Not analyzed",
+                    "institutions": "Not analyzed"
+                }),
+                "implementation_assessment": analysis.get("implementation_assessment", {
+                    "technical_feasibility": "MEDIUM",
+                    "timeline_realism": "MEDIUM",
+                    "resource_requirements": "Not analyzed",
+                    "rollback_strategy": "Not analyzed",
+                    "testing_requirements": "Not analyzed"
+                }),
+                "key_considerations": analysis.get("key_considerations", []),
+                "implementation_risk": analysis.get("implementation_risk", "MEDIUM"),
+                "chain_specific_notes": analysis.get("chain_specific_notes", ""),
+                "timeline_urgency": analysis.get("timeline_urgency", "MEDIUM"),
+                "long_term_viability": analysis.get("long_term_viability", "MEDIUM"),
+                "ecosystem_impact": analysis.get("ecosystem_impact", "NEUTRAL")
             }
             
             processed_proposals.append(processed_proposal)
@@ -791,6 +827,19 @@ async def startup_event():
     """Initialize the application on startup."""
     try:
         logger.info("Starting Cosmos GRC Co-Pilot...")
+        
+        # Load environment variables
+        try:
+            from scripts.load_env import load_env
+            load_env()
+            logger.info("Environment variables loaded successfully")
+        except Exception as e:
+            logger.warning(f"Could not load environment variables: {e}")
+        
+        # Reinitialize AI adapters after loading environment
+        global ai_analyzer
+        from ai_adapters import HybridAIAnalyzer
+        ai_analyzer = HybridAIAnalyzer()
         
         # Test AI services
         ai_status = {

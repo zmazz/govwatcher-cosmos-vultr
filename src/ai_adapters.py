@@ -98,7 +98,41 @@ class OpenAIAdapter(AIAdapter):
                 "policy_alignment": analysis.get("policy_alignment", 50),
                 "economic_impact": analysis.get("economic_impact", "NEUTRAL"),
                 "security_implications": analysis.get("security_implications", "MINIMAL"),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
+                "swot_analysis": analysis.get("swot_analysis", {
+                    "strengths": [],
+                    "weaknesses": [],
+                    "opportunities": [],
+                    "threats": []
+                }),
+                "pestel_analysis": analysis.get("pestel_analysis", {
+                    "political": "Not analyzed",
+                    "economic": "Not analyzed",
+                    "social": "Not analyzed",
+                    "technological": "Not analyzed",
+                    "environmental": "Not analyzed",
+                    "legal": "Not analyzed"
+                }),
+                "stakeholder_impact": analysis.get("stakeholder_impact", {
+                    "validators": "Not analyzed",
+                    "delegators": "Not analyzed",
+                    "developers": "Not analyzed",
+                    "users": "Not analyzed",
+                    "institutions": "Not analyzed"
+                }),
+                "implementation_assessment": analysis.get("implementation_assessment", {
+                    "technical_feasibility": "MEDIUM",
+                    "timeline_realism": "MEDIUM",
+                    "resource_requirements": "Not analyzed",
+                    "rollback_strategy": "Not analyzed",
+                    "testing_requirements": "Not analyzed"
+                }),
+                "key_considerations": analysis.get("key_considerations", []),
+                "implementation_risk": analysis.get("implementation_risk", "MEDIUM"),
+                "chain_specific_notes": analysis.get("chain_specific_notes", ""),
+                "timeline_urgency": analysis.get("timeline_urgency", "MEDIUM"),
+                "long_term_viability": analysis.get("long_term_viability", "MEDIUM"),
+                "ecosystem_impact": analysis.get("ecosystem_impact", "NEUTRAL")
             }
             
         except Exception as e:
@@ -392,7 +426,7 @@ class OpenAIAdapter(AIAdapter):
             response = await loop.run_in_executor(
                 None,
                 lambda: self.client.chat.completions.create(
-                    model="gpt-4",  # Use GPT-4 for better analysis
+                    model="gpt-4o",  # Use GPT-4 for better analysis
                     messages=[
                         {
                             "role": "system", 
@@ -401,7 +435,7 @@ class OpenAIAdapter(AIAdapter):
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.2,  # Lower temperature for more consistent analysis
-                    max_tokens=1500
+                    response_format={"type": "json_object"}
                 )
             )
             
@@ -433,17 +467,145 @@ class OpenAIAdapter(AIAdapter):
             # Ensure confidence is within valid range
             analysis['confidence'] = max(0, min(100, int(analysis.get('confidence', 50))))
             
+            # Ensure enhanced fields are present - if not in AI response, extract from reasoning
+            if not analysis.get('swot_analysis') or not any(analysis.get('swot_analysis', {}).values()):
+                analysis['swot_analysis'] = self._extract_swot_from_reasoning(analysis.get('reasoning', ''))
+            
+            if not analysis.get('pestel_analysis') or all(v == 'Not analyzed' for v in analysis.get('pestel_analysis', {}).values()):
+                analysis['pestel_analysis'] = self._extract_pestel_from_reasoning(analysis.get('reasoning', ''))
+            
+            if not analysis.get('stakeholder_impact') or all(v == 'Not analyzed' for v in analysis.get('stakeholder_impact', {}).values()):
+                analysis['stakeholder_impact'] = self._extract_stakeholder_from_reasoning(analysis.get('reasoning', ''))
+            
+            if not analysis.get('key_considerations') or not analysis['key_considerations']:
+                analysis['key_considerations'] = self._extract_considerations_from_reasoning(analysis.get('reasoning', ''))
+            
             return analysis
             
         except Exception as e:
             logger.error("Error parsing OpenAI response", error=str(e), response=response[:200])
             return self._fallback_parse(response)
     
+    def _extract_swot_from_reasoning(self, reasoning: str) -> Dict[str, List[str]]:
+        """Extract SWOT analysis from reasoning text."""
+        reasoning_lower = reasoning.lower()
+        
+        strengths = []
+        weaknesses = []
+        opportunities = []
+        threats = []
+        
+        # Extract based on keywords and context
+        if "enhance" in reasoning_lower or "improve" in reasoning_lower or "benefit" in reasoning_lower:
+            strengths.append("Proposal includes enhancements and improvements to the ecosystem")
+        
+        if "risk" in reasoning_lower or "concern" in reasoning_lower or "challenge" in reasoning_lower:
+            weaknesses.append("Proposal carries implementation risks and potential challenges")
+        
+        if "growth" in reasoning_lower or "development" in reasoning_lower or "expansion" in reasoning_lower:
+            opportunities.append("Potential for ecosystem growth and development")
+        
+        if "security" in reasoning_lower and ("risk" in reasoning_lower or "vulnerability" in reasoning_lower):
+            threats.append("Security considerations require careful evaluation")
+        
+        return {
+            "strengths": strengths or ["Proposal aligns with network objectives"],
+            "weaknesses": weaknesses or ["Implementation complexity requires assessment"],
+            "opportunities": opportunities or ["Potential for positive ecosystem impact"],
+            "threats": threats or ["Standard governance and technical risks apply"]
+        }
+    
+    def _extract_pestel_from_reasoning(self, reasoning: str) -> Dict[str, str]:
+        """Extract PESTEL analysis from reasoning text."""
+        reasoning_lower = reasoning.lower()
+        
+        political = "Governance implications require community consensus and voting coordination"
+        economic = "Economic impact on token value, inflation, and fee structures needs evaluation"
+        social = "Community adoption and user experience considerations apply"
+        technological = "Technical implementation feasibility and security implications"
+        environmental = "Network sustainability and long-term viability considerations"
+        legal = "Regulatory compliance and legal framework adherence"
+        
+        # Customize based on content
+        if "governance" in reasoning_lower:
+            political = "Significant governance implications affecting voting mechanisms and community decision-making"
+        
+        if "economic" in reasoning_lower or "token" in reasoning_lower or "fee" in reasoning_lower:
+            economic = "Direct economic impact on tokenomics, fees, and ecosystem financial structure"
+        
+        if "security" in reasoning_lower:
+            technological = "Critical security and technical implementation considerations requiring thorough evaluation"
+        
+        return {
+            "political": political,
+            "economic": economic,
+            "social": social,
+            "technological": technological,
+            "environmental": environmental,
+            "legal": legal
+        }
+    
+    def _extract_stakeholder_from_reasoning(self, reasoning: str) -> Dict[str, str]:
+        """Extract stakeholder impact from reasoning text."""
+        reasoning_lower = reasoning.lower()
+        
+        validators = "Impact on validator operations, rewards, and network participation"
+        delegators = "Effects on staking rewards, voting power, and delegation strategies"
+        developers = "Implications for development environment, APIs, and integration requirements"
+        users = "Changes to user experience, transaction fees, and platform functionality"
+        institutions = "Considerations for institutional adoption, compliance, and regulatory alignment"
+        
+        # Customize based on content
+        if "validator" in reasoning_lower:
+            validators = "Direct impact on validator operations, consensus participation, and reward structures"
+        
+        if "staking" in reasoning_lower or "delegation" in reasoning_lower:
+            delegators = "Significant implications for staking mechanisms, delegation rewards, and voting power distribution"
+        
+        if "fee" in reasoning_lower:
+            users = "Direct impact on user transaction costs and platform accessibility"
+        
+        return {
+            "validators": validators,
+            "delegators": delegators,
+            "developers": developers,
+            "users": users,
+            "institutions": institutions
+        }
+    
+    def _extract_considerations_from_reasoning(self, reasoning: str) -> List[str]:
+        """Extract key considerations from reasoning text."""
+        considerations = []
+        reasoning_lower = reasoning.lower()
+        
+        if "security" in reasoning_lower:
+            considerations.append("Security implications require thorough evaluation")
+        
+        if "economic" in reasoning_lower or "token" in reasoning_lower:
+            considerations.append("Economic impact on ecosystem tokenomics")
+        
+        if "governance" in reasoning_lower:
+            considerations.append("Governance process and community consensus requirements")
+        
+        if "implementation" in reasoning_lower or "technical" in reasoning_lower:
+            considerations.append("Technical implementation complexity and timeline")
+        
+        if "risk" in reasoning_lower:
+            considerations.append("Risk assessment and mitigation strategies needed")
+        
+        return considerations or [
+            "Comprehensive proposal evaluation required",
+            "Community consensus and governance process adherence",
+            "Technical feasibility and implementation timeline",
+            "Economic impact assessment on ecosystem",
+            "Security and risk evaluation protocols"
+        ]
+    
     def _fallback_parse(self, response: str) -> Dict[str, Any]:
         """Fallback parsing for non-JSON responses."""
         recommendation = "ABSTAIN"
         confidence = 50
-        reasoning = response[:200] if response else "Analysis unavailable"
+        reasoning = response[:500] if response else "Analysis unavailable"
         
         # Enhanced keyword analysis
         response_lower = response.lower()
@@ -475,7 +637,41 @@ class OpenAIAdapter(AIAdapter):
             "policy_alignment": 50,
             "economic_impact": "NEUTRAL",
             "security_implications": "MINIMAL",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
+            "swot_analysis": {
+                "strengths": [],
+                "weaknesses": [],
+                "opportunities": [],
+                "threats": []
+            },
+            "pestel_analysis": {
+                "political": "Not analyzed",
+                "economic": "Not analyzed",
+                "social": "Not analyzed",
+                "technological": "Not analyzed",
+                "environmental": "Not analyzed",
+                "legal": "Not analyzed"
+            },
+            "stakeholder_impact": {
+                "validators": "Not analyzed",
+                "delegators": "Not analyzed",
+                "developers": "Not analyzed",
+                "users": "Not analyzed",
+                "institutions": "Not analyzed"
+            },
+            "implementation_assessment": {
+                "technical_feasibility": "MEDIUM",
+                "timeline_realism": "MEDIUM",
+                "resource_requirements": "Not analyzed",
+                "rollback_strategy": "Not analyzed",
+                "testing_requirements": "Not analyzed"
+            },
+            "key_considerations": [],
+            "implementation_risk": "MEDIUM",
+            "chain_specific_notes": "",
+            "timeline_urgency": "MEDIUM",
+            "long_term_viability": "MEDIUM",
+            "ecosystem_impact": "NEUTRAL"
         }
 
 class GroqAdapter(AIAdapter):
@@ -521,7 +717,45 @@ class GroqAdapter(AIAdapter):
                 "reasoning": analysis.get("reasoning", "Analysis unavailable"),
                 "risk_assessment": analysis.get("risk_assessment", "MEDIUM"),
                 "policy_alignment": analysis.get("policy_alignment", 50),
-                "timestamp": datetime.utcnow().isoformat()
+                "economic_impact": analysis.get("economic_impact", "NEUTRAL"),
+                "security_implications": analysis.get("security_implications", "MINIMAL"),
+                "timestamp": datetime.utcnow().isoformat(),
+                
+                # Enhanced analysis fields
+                "swot_analysis": analysis.get("swot_analysis", {
+                    "strengths": [],
+                    "weaknesses": [],
+                    "opportunities": [],
+                    "threats": []
+                }),
+                "pestel_analysis": analysis.get("pestel_analysis", {
+                    "political": "Not analyzed",
+                    "economic": "Not analyzed",
+                    "social": "Not analyzed",
+                    "technological": "Not analyzed",
+                    "environmental": "Not analyzed",
+                    "legal": "Not analyzed"
+                }),
+                "stakeholder_impact": analysis.get("stakeholder_impact", {
+                    "validators": "Not analyzed",
+                    "delegators": "Not analyzed",
+                    "developers": "Not analyzed",
+                    "users": "Not analyzed",
+                    "institutions": "Not analyzed"
+                }),
+                "implementation_assessment": analysis.get("implementation_assessment", {
+                    "technical_feasibility": "MEDIUM",
+                    "timeline_realism": "MEDIUM",
+                    "resource_requirements": "Not analyzed",
+                    "rollback_strategy": "Not analyzed",
+                    "testing_requirements": "Not analyzed"
+                }),
+                "key_considerations": analysis.get("key_considerations", []),
+                "implementation_risk": analysis.get("implementation_risk", "MEDIUM"),
+                "chain_specific_notes": analysis.get("chain_specific_notes", ""),
+                "timeline_urgency": analysis.get("timeline_urgency", "MEDIUM"),
+                "long_term_viability": analysis.get("long_term_viability", "MEDIUM"),
+                "ecosystem_impact": analysis.get("ecosystem_impact", "NEUTRAL")
             }
             
         except Exception as e:
@@ -616,7 +850,7 @@ class GroqAdapter(AIAdapter):
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.3,
-                    max_tokens=1000
+                    max_tokens=2500
                 )
             )
             
@@ -672,7 +906,45 @@ class GroqAdapter(AIAdapter):
             "reasoning": "AI analysis unavailable - manual review required",
             "risk_assessment": "MEDIUM",
             "policy_alignment": 50,
-            "timestamp": datetime.utcnow().isoformat()
+            "economic_impact": "NEUTRAL",
+            "security_implications": "MINIMAL",
+            "timestamp": datetime.utcnow().isoformat(),
+            
+            # Enhanced analysis fields
+            "swot_analysis": {
+                "strengths": [],
+                "weaknesses": [],
+                "opportunities": [],
+                "threats": []
+            },
+            "pestel_analysis": {
+                "political": "Not analyzed",
+                "economic": "Not analyzed",
+                "social": "Not analyzed",
+                "technological": "Not analyzed",
+                "environmental": "Not analyzed",
+                "legal": "Not analyzed"
+            },
+            "stakeholder_impact": {
+                "validators": "Not analyzed",
+                "delegators": "Not analyzed",
+                "developers": "Not analyzed",
+                "users": "Not analyzed",
+                "institutions": "Not analyzed"
+            },
+            "implementation_assessment": {
+                "technical_feasibility": "MEDIUM",
+                "timeline_realism": "MEDIUM",
+                "resource_requirements": "Not analyzed",
+                "rollback_strategy": "Not analyzed",
+                "testing_requirements": "Not analyzed"
+            },
+            "key_considerations": [],
+            "implementation_risk": "MEDIUM",
+            "chain_specific_notes": "",
+            "timeline_urgency": "MEDIUM",
+            "long_term_viability": "MEDIUM",
+            "ecosystem_impact": "NEUTRAL"
         }
 
 class LlamaAdapter(AIAdapter):

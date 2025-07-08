@@ -537,16 +537,11 @@
                                                 All Chains Healthy
                                             </span>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">
-                                                <i class="fas fa-clock me-1"></i>
-                                                Last Update: 2 min ago
-                                            </span>
-                                        </div>
+                                        <br>
                                         <div class="d-flex justify-content-between">
                                             <span class="text-muted">
                                                 <i class="fas fa-sync-alt me-1"></i>
-                                                Auto-refresh: 5 min
+                                                Auto-refresh: 1 hour
                                             </span>
                                         </div>
                                     </div>
@@ -692,6 +687,32 @@
                                                                 </small>
                                                             </div>
                                                         </div>
+                                                        
+                                                        <!-- Enhanced Analysis Summary -->
+                                                        <div class="row mt-2">
+                                                            <div class="col-6">
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-cogs me-1"></i>
+                                                                    Implementation: {{ proposal.implementation_risk }}
+                                                                </small>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-globe me-1"></i>
+                                                                    Ecosystem: {{ proposal.ecosystem_impact }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Key Considerations Preview -->
+                                                        {% if proposal.key_considerations %}
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-lightbulb me-1"></i>
+                                                                Key: {{ proposal.key_considerations[0] if proposal.key_considerations else 'Standard governance review' }}
+                                                            </small>
+                                                        </div>
+                                                        {% endif %}
                                                     </div>
                                                     
                                                     <div class="d-flex justify-content-between align-items-center mt-3">
@@ -1084,6 +1105,367 @@
                                             </small>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Analysis Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Enhanced Analysis Framework
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- SWOT Analysis -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold mb-3">
+                                            <i class="fas fa-balance-scale me-2"></i>
+                                            SWOT Analysis
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card bg-success bg-opacity-10 mb-3">
+                                                    <div class="card-body">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-plus-circle me-1"></i>
+                                                            Strengths
+                                                        </h6>
+                                                        <ul class="list-unstyled mb-0">
+                                                            ${(proposal.swot_analysis?.strengths || []).map(strength => 
+                                                                `<li><i class="fas fa-check me-2 text-success"></i>${escapeHtml(strength)}</li>`
+                                                            ).join('')}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="card bg-info bg-opacity-10">
+                                                    <div class="card-body">
+                                                        <h6 class="text-info">
+                                                            <i class="fas fa-star me-1"></i>
+                                                            Opportunities
+                                                        </h6>
+                                                        <ul class="list-unstyled mb-0">
+                                                            ${(proposal.swot_analysis?.opportunities || []).map(opportunity => 
+                                                                `<li><i class="fas fa-arrow-up me-2 text-info"></i>${escapeHtml(opportunity)}</li>`
+                                                            ).join('')}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card bg-warning bg-opacity-10 mb-3">
+                                                    <div class="card-body">
+                                                        <h6 class="text-warning">
+                                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                                            Weaknesses
+                                                        </h6>
+                                                        <ul class="list-unstyled mb-0">
+                                                            ${(proposal.swot_analysis?.weaknesses || []).map(weakness => 
+                                                                `<li><i class="fas fa-minus me-2 text-warning"></i>${escapeHtml(weakness)}</li>`
+                                                            ).join('')}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="card bg-danger bg-opacity-10">
+                                                    <div class="card-body">
+                                                        <h6 class="text-danger">
+                                                            <i class="fas fa-shield-alt me-1"></i>
+                                                            Threats
+                                                        </h6>
+                                                        <ul class="list-unstyled mb-0">
+                                                            ${(proposal.swot_analysis?.threats || []).map(threat => 
+                                                                `<li><i class="fas fa-times me-2 text-danger"></i>${escapeHtml(threat)}</li>`
+                                                            ).join('')}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- PESTEL Analysis -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold mb-3">
+                                            <i class="fas fa-globe me-2"></i>
+                                            PESTEL Analysis
+                                        </h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-primary">
+                                                            <i class="fas fa-vote-yea me-1"></i>
+                                                            Political
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.political || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-chart-line me-1"></i>
+                                                            Economic
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.economic || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-info">
+                                                            <i class="fas fa-users me-1"></i>
+                                                            Social
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.social || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-warning">
+                                                            <i class="fas fa-microchip me-1"></i>
+                                                            Technological
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.technological || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-leaf me-1"></i>
+                                                            Environmental
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.environmental || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="text-danger">
+                                                            <i class="fas fa-gavel me-1"></i>
+                                                            Legal
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.pestel_analysis?.legal || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Stakeholder Impact -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold mb-3">
+                                            <i class="fas fa-network-wired me-2"></i>
+                                            Stakeholder Impact Analysis
+                                        </h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card border-primary">
+                                                    <div class="card-body">
+                                                        <h6 class="text-primary">
+                                                            <i class="fas fa-server me-1"></i>
+                                                            Validators
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.stakeholder_impact?.validators || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card border-success">
+                                                    <div class="card-body">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-coins me-1"></i>
+                                                            Delegators
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.stakeholder_impact?.delegators || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card border-info">
+                                                    <div class="card-body">
+                                                        <h6 class="text-info">
+                                                            <i class="fas fa-code me-1"></i>
+                                                            Developers
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.stakeholder_impact?.developers || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card border-warning">
+                                                    <div class="card-body">
+                                                        <h6 class="text-warning">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            Users
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.stakeholder_impact?.users || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="card border-secondary">
+                                                    <div class="card-body">
+                                                        <h6 class="text-secondary">
+                                                            <i class="fas fa-building me-1"></i>
+                                                            Institutions
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.stakeholder_impact?.institutions || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Implementation Assessment -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold mb-3">
+                                            <i class="fas fa-cogs me-2"></i>
+                                            Implementation Assessment
+                                        </h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="text-primary">
+                                                            <i class="fas fa-wrench me-1"></i>
+                                                            Technical Feasibility
+                                                        </h6>
+                                                        <span class="badge bg-${proposal.implementation_assessment?.technical_feasibility === 'HIGH' ? 'success' : proposal.implementation_assessment?.technical_feasibility === 'MEDIUM' ? 'warning' : 'danger'}">
+                                                            ${escapeHtml(proposal.implementation_assessment?.technical_feasibility || 'MEDIUM')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            Timeline Realism
+                                                        </h6>
+                                                        <span class="badge bg-${proposal.implementation_assessment?.timeline_realism === 'HIGH' ? 'success' : proposal.implementation_assessment?.timeline_realism === 'MEDIUM' ? 'warning' : 'danger'}">
+                                                            ${escapeHtml(proposal.implementation_assessment?.timeline_realism || 'MEDIUM')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="text-info">
+                                                            <i class="fas fa-tasks me-1"></i>
+                                                            Resource Requirements
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.implementation_assessment?.resource_requirements || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="text-warning">
+                                                            <i class="fas fa-undo me-1"></i>
+                                                            Rollback Strategy
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.implementation_assessment?.rollback_strategy || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="text-danger">
+                                                            <i class="fas fa-vial me-1"></i>
+                                                            Testing Requirements
+                                                        </h6>
+                                                        <p class="small mb-0">${escapeHtml(proposal.implementation_assessment?.testing_requirements || 'Not analyzed')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Key Considerations & Additional Metrics -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-3">
+                                                        <i class="fas fa-key me-2"></i>
+                                                        Key Considerations
+                                                    </h6>
+                                                    <ul class="list-unstyled">
+                                                        ${(proposal.key_considerations || []).map(consideration => 
+                                                            `<li class="mb-2"><i class="fas fa-arrow-right me-2 text-primary"></i>${escapeHtml(consideration)}</li>`
+                                                        ).join('')}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-3">
+                                                        <i class="fas fa-chart-pie me-2"></i>
+                                                        Additional Metrics
+                                                    </h6>
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Implementation Risk:</small><br>
+                                                            <span class="badge bg-${proposal.implementation_risk === 'HIGH' ? 'danger' : proposal.implementation_risk === 'MEDIUM' ? 'warning' : 'success'}">
+                                                                ${escapeHtml(proposal.implementation_risk || 'MEDIUM')}
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Timeline Urgency:</small><br>
+                                                            <span class="badge bg-${proposal.timeline_urgency === 'HIGH' ? 'danger' : proposal.timeline_urgency === 'MEDIUM' ? 'warning' : 'success'}">
+                                                                ${escapeHtml(proposal.timeline_urgency || 'MEDIUM')}
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Long-term Viability:</small><br>
+                                                            <span class="badge bg-${proposal.long_term_viability === 'HIGH' ? 'success' : proposal.long_term_viability === 'MEDIUM' ? 'warning' : 'danger'}">
+                                                                ${escapeHtml(proposal.long_term_viability || 'MEDIUM')}
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Ecosystem Impact:</small><br>
+                                                            <span class="badge bg-${proposal.ecosystem_impact === 'POSITIVE' ? 'success' : proposal.ecosystem_impact === 'NEGATIVE' ? 'danger' : 'secondary'}">
+                                                                ${escapeHtml(proposal.ecosystem_impact || 'NEUTRAL')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Chain-Specific Notes -->
+                                    ${proposal.chain_specific_notes ? `
+                                    <div class="mt-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="fw-bold mb-2">
+                                                    <i class="fas fa-link me-2"></i>
+                                                    Chain-Specific Notes
+                                                </h6>
+                                                <p class="small mb-0">${escapeHtml(proposal.chain_specific_notes)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
